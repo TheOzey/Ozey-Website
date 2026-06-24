@@ -221,35 +221,61 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   border-bottom: 1px solid transparent;
   transition: border-color 240ms var(--ease), background-color 600ms var(--ease-quiet);
 }
-.masthead.is-scrolled { border-bottom-color: var(--hairline); }
+.masthead.is-scrolled,
+#nav.is-scrolled { border-bottom-color: var(--hairline); }
 
-.masthead-row {
+/* Grid row — works with both .masthead-row wrapper and direct nav */
+.masthead-row,
+.masthead nav {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 24px;
 }
-.masthead-mid {
+.masthead-mid,
+.masthead .nav-center {
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.04em;
   color: var(--fg-quiet);
   text-align: center;
 }
-.masthead-nav {
+.masthead-nav,
+.masthead .nav-links {
   display: flex;
   gap: 24px;
   justify-self: end;
   font-size: 14px;
   color: var(--fg-soft);
 }
-.masthead-nav a { transition: color 200ms var(--ease); }
-.masthead-nav a:hover     { color: var(--fg); }
-.masthead-nav a.is-current { color: var(--brand-primary); }
+.masthead-nav a,
+.masthead .nav-links a { transition: color 200ms var(--ease); }
+.masthead-nav a:hover,
+.masthead .nav-links a:hover     { color: var(--fg); }
+.masthead-nav a.is-current,
+.masthead .nav-links a[aria-current] { color: var(--brand-primary); }
+
+/* Nav brand */
+.nav-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--fg);
+}
+.nav-brand svg { width: 22px; height: 24px; color: var(--fg); flex: none; }
+.nav-brand-name {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 16px;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+}
 
 @media (max-width: 800px) {
-  .masthead-mid { display: none; }
-  .masthead-row { grid-template-columns: 1fr auto; }
+  .masthead-mid,
+  .masthead .nav-center { display: none; }
+  .masthead-row,
+  .masthead nav { grid-template-columns: 1fr auto; }
 }
 
 /* =========================================================
@@ -284,11 +310,23 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 /* =========================================================
    Reveal motion
    ========================================================= */
-.reveal, html.js .reveal, html.js .reveal.in {
-  opacity: 1; transform: none; animation: none;
+.reveal {
+  opacity: 1;
+  transform: none;
+  transition: opacity 700ms var(--ease), transform 700ms var(--ease);
 }
+html.js .reveal         { opacity: 0; transform: translateY(28px); }
+html.js .reveal.in      { opacity: 1; transform: none; }
+html.js .reveal-delay-1 { transition-delay: 80ms; }
+html.js .reveal-delay-2 { transition-delay: 160ms; }
+html.js .reveal-delay-3 { transition-delay: 240ms; }
+html.js .reveal-delay-4 { transition-delay: 320ms; }
+html.js .reveal-delay-5 { transition-delay: 400ms; }
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
+  html.js .reveal,
+  html.js .reveal.in { opacity: 1; transform: none; transition: none; }
 }
 
 /* =========================================================
@@ -310,7 +348,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   min-height: 90vh;
   display: flex;
   align-items: center;
-  padding: clamp(80px, 12vw, 160px) 0;
+  padding: clamp(80px, 12vw, 160px) var(--margin);
 }
 .narrative .n-step + .n-step { border-top: 0; }
 
@@ -334,19 +372,24 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   padding-bottom: clamp(80px, 10vw, 120px);
 }
 .n-hero-wrap {
+  width: 100%;
+  max-width: 900px;
+  margin-inline: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
   gap: clamp(28px, 4.5vw, 56px);
 }
-.n-hero .hero-v6-mark {
+.n-hero .hero-v6-mark,
+.n-hero .n-hero-mark {
   width: clamp(120px, 16vw, 200px);
   height: clamp(120px, 16vw, 200px);
   margin-bottom: clamp(8px, 2vw, 24px);
   transition: opacity 400ms var(--ease);
 }
-.n-hero .hero-v6-mark:hover { opacity: 0.7; }
+.n-hero .hero-v6-mark:hover,
+.n-hero .n-hero-mark:hover { opacity: 0.7; }
 
 .n-hero-headline {
   font-family: var(--font-display);
@@ -433,7 +476,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 /* ---- 05 Explore ---- */
 .n-explore {
   min-height: auto;
-  padding: 0;
+  padding: 0 !important;
   border-top: 1px solid var(--hairline);
   border-bottom: 1px solid var(--hairline);
   display: block;
@@ -518,30 +561,59 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 /* =========================================================
    Colophon / footer
    ========================================================= */
+.colophon,
 .colophon.v4 {
   border-top: 1px solid var(--hairline);
   padding: 32px 0;
   background: var(--bg);
   transition: background-color 600ms var(--ease-quiet);
 }
+.colophon-inner,
 .colophon-v4-row {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   align-items: center;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding-inline: var(--margin);
 }
+.colophon-center,
 .colophon-v4-row .footer-mid {
   text-align: center;
   justify-self: center;
+  font-size: 13px;
+  color: var(--fg-quiet);
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
 }
+.colophon-right,
 .colophon-v4-row .footer-end {
   text-align: right;
   justify-self: end;
 }
+.colophon-email { font-size: 13px; color: var(--fg-soft); }
+.colophon-email:hover,
 .colophon-v4-row a.footer-mid:hover,
 .colophon-v4-row a.footer-end:hover { color: var(--brand-primary); }
+.colophon-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.colophon-brand svg { color: var(--fg); flex: none; }
+.colophon-brand-name {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 15px;
+  letter-spacing: -0.015em;
+  color: var(--fg);
+}
 
 @media (max-width: 600px) {
+  .colophon-inner,
   .colophon-v4-row { grid-template-columns: 1fr; gap: 12px; }
+  .colophon-center,
+  .colophon-right,
   .colophon-v4-row .footer-mid,
   .colophon-v4-row .footer-end { justify-self: start; text-align: left; }
 }

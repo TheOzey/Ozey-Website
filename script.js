@@ -1,7 +1,7 @@
 /* Ozey homepage — interactions */
 (() => {
   document.documentElement.classList.add("js");
-  const nav = document.getElementById("nav");
+  const nav = document.querySelector(".masthead") || document.getElementById("nav");
   let lastY = 0;
   const onScroll = () => {
     const y = window.scrollY;
