@@ -370,6 +370,7 @@ html.js .reveal-delay-5 { transition-delay: 400ms; }
   min-height: 100vh;
   padding-top: clamp(120px, 14vw, 180px);
   padding-bottom: clamp(80px, 10vw, 120px);
+  overflow: hidden;
 }
 .n-hero-wrap {
   width: 100%;
@@ -380,6 +381,8 @@ html.js .reveal-delay-5 { transition-delay: 400ms; }
   align-items: center;
   text-align: center;
   gap: clamp(28px, 4.5vw, 56px);
+  position: relative;
+  z-index: 1;
 }
 .n-hero .hero-v6-mark,
 .n-hero .n-hero-mark {
@@ -588,7 +591,9 @@ html.js .reveal-delay-5 { transition-delay: 400ms; }
 }
 .colophon-right,
 .colophon-v4-row .footer-end {
-  text-align: right;
+  display: flex;
+  align-items: center;
+  gap: 16px;
   justify-self: end;
 }
 .colophon-email { font-size: 13px; color: var(--fg-soft); }
@@ -1182,4 +1187,121 @@ html.js .reveal-delay-5 { transition-delay: 400ms; }
 @keyframes drift {
   0%, 100% { transform: translateY(0); opacity: 0.55; }
   50%       { transform: translateY(6px); opacity: 1; }
+}
+
+/* =========================================================
+   Hero network canvas
+   ========================================================= */
+.hero-network {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  transition: opacity 400ms ease;
+  will-change: transform, opacity;
+}
+
+/* =========================================================
+   Footer social icons
+   ========================================================= */
+.colophon-social {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.colophon-social-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  color: var(--fg-quiet);
+  transition: color 200ms var(--ease), transform 200ms var(--ease);
+}
+.colophon-social-link svg { width: 14px; height: 14px; }
+.colophon-social-link:hover {
+  color: var(--brand-primary);
+  transform: translateY(-1px);
+}
+
+/* =========================================================
+   About — editorial section marks (CSS counter watermarks)
+   ========================================================= */
+.essay-page { counter-reset: essay-sec; }
+.es-step {
+  counter-increment: essay-sec;
+  overflow: hidden;
+}
+.es-step::after {
+  content: "0" counter(essay-sec);
+  position: absolute;
+  right: -0.02em;
+  bottom: -0.15em;
+  font-family: var(--font-mono);
+  font-size: clamp(100px, 20vw, 260px);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.06em;
+  color: var(--fg);
+  opacity: 0.025;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+}
+.es-step > * { position: relative; z-index: 1; }
+
+/* =========================================================
+   Products — hover lift on preview frame
+   ========================================================= */
+.product-preview {
+  transition: transform 420ms var(--ease), box-shadow 420ms var(--ease);
+  will-change: transform;
+}
+.product:hover .product-preview {
+  transform: translateY(-5px);
+  box-shadow: 0 16px 48px color-mix(in oklab, var(--fg) 7%, transparent);
+}
+.ui-frame {
+  transition: box-shadow 300ms var(--ease);
+}
+.product:hover .ui-frame {
+  box-shadow: 0 2px 0 color-mix(in oklab, var(--fg) 6%, transparent);
+}
+
+/* =========================================================
+   Focus states (keyboard navigation)
+   ========================================================= */
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* =========================================================
+   Reduced motion — comprehensive override
+   ========================================================= */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  html.js .reveal,
+  html.js .reveal.in { opacity: 1; transform: none; transition: none; }
+  html.js .reveal-delay-1,
+  html.js .reveal-delay-2,
+  html.js .reveal-delay-3,
+  html.js .reveal-delay-4,
+  html.js .reveal-delay-5 { transition-delay: 0ms; }
+  .hero-network { display: none; }
+  .product-preview,
+  .ui-frame,
+  .btn,
+  .btn:hover,
+  .outro-link,
+  .outro-arrow,
+  .colophon-social-link,
+  .product-link,
+  .product-link-arrow,
+  .nav-links a,
+  .masthead-nav a { transition: none; transform: none; }
 }
