@@ -1,1 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+/* Ozey uses the SF Pro-oriented system stack defined in tokens.css
+   (--font-sans). No webfonts are loaded: Apple devices render genuine
+   SF Pro, other platforms fall back to Helvetica Neue/Arial, and there
+   is zero font-loading layout shift. Do not bundle Apple font files. */
