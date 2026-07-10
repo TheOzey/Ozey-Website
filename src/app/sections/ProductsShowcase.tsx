@@ -69,13 +69,7 @@ function ProductCard({
     >
       <h3 className="type-heading-lg">{product.name}</h3>
       <p className="type-body-md product-platform">{product.platform}</p>
-      <ul className="product-lines" role="list">
-        {product.lines.map((line) => (
-          <li key={line} className="type-body-lg">
-            {line}
-          </li>
-        ))}
-      </ul>
+      <p className="type-body-lg product-copy">{product.lines.join(" ")}</p>
       <div className="product-preview">
         <img src={product.image} alt={`${product.name} app preview`} loading="lazy" />
       </div>
@@ -94,7 +88,9 @@ export function ProductsShowcase({ onNav }: { onNav: (p: Page) => void }) {
           <span className="type-label-md type-label-caps section-label">Products</span>
         </Reveal>
         <Reveal as="h2" delay={120} className="type-heading-xl products-heading">
-          Focused systems, built for real work.
+          Focused systems,
+          <br />
+          built for real work.
         </Reveal>
         <Reveal delay={220}>
           <p className="type-body-lg products-support">
