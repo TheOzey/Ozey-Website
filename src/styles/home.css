@@ -277,6 +277,21 @@
   }
 
   /* ── Products showcase ──────────────────────────────────────────────────── */
+  /* The whole section fits one viewport on desktop: heading block plus both
+     cards visible with no scroll. Card height flexes with the viewport. */
+  @media (min-width: 900px) {
+    .products.section {
+      min-height: 100svh;
+      padding-block: var(--space-12);
+      display: flex;
+      align-items: center;
+    }
+
+    .products .container-page {
+      width: 100%;
+    }
+  }
+
   .products-heading {
     max-width: 24ch;
     margin-top: var(--space-8);
@@ -291,7 +306,7 @@
     display: grid;
     grid-template-columns: 1fr;
     gap: var(--space-8);
-    margin-top: var(--space-16);
+    margin-top: var(--space-12);
   }
 
   @media (min-width: 900px) {
@@ -305,7 +320,7 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    min-height: 700px;
+    min-height: clamp(440px, 58svh, 560px);
     padding: var(--space-10);
     text-decoration: none;
     color: inherit;
@@ -327,7 +342,7 @@
     gap: var(--space-4);
     list-style: none;
     padding: 0;
-    margin: var(--space-16) 0 0;
+    margin: var(--space-10) 0 0;
     color: var(--text-secondary);
   }
 
@@ -335,17 +350,17 @@
      The space above it is deliberate negative space. */
   .product-preview {
     margin-top: auto;
-    padding-top: var(--space-10);
+    padding-top: var(--space-6);
     display: flex;
     align-items: flex-end;
     justify-content: center;
-    min-height: 340px;
+    min-height: 150px;
   }
 
   .product-preview img {
-    width: 100%;
+    width: min(100%, 380px);
     height: auto;
-    max-height: 400px;
+    max-height: clamp(160px, 26svh, 300px);
     object-fit: contain;
     display: block;
     border-radius: var(--radius-md);
@@ -383,6 +398,36 @@
     .product-card:hover .product-cta svg,
     .product-card:focus-visible .product-cta svg {
       transform: translate(3px, -3px);
+    }
+  }
+
+  /* Short desktop viewports: tighten internals so the section still fits. */
+  @media (min-width: 900px) and (max-height: 880px) {
+    .products-grid {
+      margin-top: var(--space-8);
+    }
+
+    .product-card {
+      padding: var(--space-8);
+      min-height: clamp(420px, 56svh, 520px);
+    }
+
+    .product-lines {
+      margin-top: var(--space-8);
+      gap: var(--space-3);
+    }
+
+    .product-preview {
+      min-height: 110px;
+    }
+
+    .product-preview img {
+      max-height: clamp(140px, 22svh, 240px);
+    }
+
+    .product-cta {
+      right: var(--space-8);
+      bottom: var(--space-8);
     }
   }
 
@@ -454,11 +499,7 @@
     }
 
     .product-card {
-      min-height: 620px;
-    }
-
-    .product-preview {
-      min-height: 330px;
+      min-height: 520px;
     }
   }
 }
