@@ -1,0 +1,433 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   OZEY HOMEPAGE — narrative composition styles (Phase 2).
+   Motion-dependent hidden states live inside prefers-reduced-motion:
+   no-preference so reduced-motion users always see final readable content.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@layer components {
+  /* ── Reveal (Flow family) ───────────────────────────────────────────────── */
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal {
+      opacity: 0;
+      transform: translateY(var(--motion-distance-md));
+      clip-path: inset(0 0 22% 0);
+      transition:
+        opacity var(--motion-reveal-duration) var(--ease-out),
+        transform var(--motion-reveal-duration) var(--ease-out),
+        clip-path var(--motion-reveal-duration) var(--ease-out);
+    }
+
+    .reveal.in {
+      opacity: 1;
+      transform: none;
+      clip-path: inset(0 0 0 0);
+    }
+  }
+
+  /* Shared quiet section label (slate — the gradient is reserved). */
+  .section-label {
+    display: block;
+    color: var(--text-tertiary);
+  }
+
+  /* ── Hero ───────────────────────────────────────────────────────────────── */
+  .hero {
+    position: relative;
+    min-height: 100svh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .hero-atmosphere {
+    position: absolute;
+    inset: 0;
+    z-index: var(--z-atmosphere);
+    pointer-events: none;
+  }
+
+  .hero-orbit {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Aurora — soft light fields entering from the slash direction.
+     Glow tokens + element opacity keep the effective strength in the
+     locked 5–12% band. Locked blur system only. */
+  .hero-aurora {
+    position: absolute;
+    inset: -12%;
+  }
+
+  .hero-aurora::before,
+  .hero-aurora::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(var(--blur-deep));
+  }
+
+  .hero-aurora::before {
+    top: -18%;
+    right: -4%;
+    width: 72%;
+    height: 78%;
+    background: linear-gradient(
+      var(--ozey-angle),
+      var(--glow-warm) 0%,
+      var(--glow-cyan) 55%,
+      transparent 85%
+    );
+    opacity: 0.55;
+  }
+
+  .hero-aurora::after {
+    bottom: -22%;
+    left: -8%;
+    width: 66%;
+    height: 72%;
+    background: linear-gradient(
+      var(--ozey-angle),
+      var(--glow-violet) 10%,
+      var(--glow-magenta) 55%,
+      transparent 85%
+    );
+    opacity: 0.5;
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: var(--z-content);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: var(--space-10);
+    padding-inline: var(--page-gutter);
+  }
+
+  .hero-headline {
+    max-width: 18ch;
+    text-wrap: balance;
+  }
+
+  .hero-support {
+    margin-top: calc(-1 * var(--space-4));
+  }
+
+  /* ── Current Reality ────────────────────────────────────────────────────── */
+  .reality {
+    min-height: 190svh;
+    padding-block: 0;
+  }
+
+  .reality-sticky {
+    position: sticky;
+    top: 0;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--space-10);
+  }
+
+  .reality-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .reality-word {
+    position: relative;
+    width: fit-content;
+    color: var(--text-muted);
+    transition: color 600ms var(--ease-out);
+  }
+
+  .reality-word.is-active {
+    color: var(--text-primary);
+  }
+
+  .reality-word.is-settled {
+    color: var(--text-secondary);
+  }
+
+  /* Signal pass — a brief travelling light clipped to the glyphs of the
+     word being activated. Plays once per activation. */
+  @media (prefers-reduced-motion: no-preference) {
+    .reality-word.is-active::after {
+      content: attr(data-text) / "";
+      position: absolute;
+      inset: 0;
+      background-image: linear-gradient(
+        var(--ozey-angle),
+        transparent 40%,
+        rgba(57, 198, 232, 0.9) 49%,
+        rgba(123, 97, 255, 0.9) 55%,
+        transparent 64%
+      );
+      background-size: 240% 100%;
+      background-repeat: no-repeat;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+      opacity: 0;
+      animation: reality-signal var(--motion-travel-duration) var(--ease-out) 1;
+      pointer-events: none;
+    }
+  }
+
+  @keyframes reality-signal {
+    0% {
+      background-position: 135% 0;
+      opacity: 0;
+    }
+    18% {
+      opacity: 1;
+    }
+    82% {
+      opacity: 1;
+    }
+    100% {
+      background-position: -35% 0;
+      opacity: 0;
+    }
+  }
+
+  /* ── Respect Gap ────────────────────────────────────────────────────────── */
+  .respect {
+    display: flex;
+    align-items: center;
+    min-height: 90svh;
+  }
+
+  .respect-lines {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    align-items: center;
+    text-align: center;
+    margin-inline: auto;
+  }
+
+  .respect-line-quiet {
+    color: var(--text-muted);
+  }
+
+  /* "respect gap" — the homepage's one Intelligence Gradient moment.
+     The gradient travels across the phrase exactly once when the section
+     first activates, then settles as static gradient text. Under reduced
+     motion the gradient is present without the travel. */
+  .respect-gap-phrase {
+    color: var(--text-primary);
+  }
+
+  .respect-gap-phrase.is-signaled {
+    background-image: var(--gradient-intelligence);
+    background-size: 220% 100%;
+    background-position: 0% 0;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .respect-gap-phrase.is-signaled {
+      animation: gap-travel var(--motion-travel-duration) var(--ease-out) 1;
+    }
+  }
+
+  @keyframes gap-travel {
+    from {
+      background-position: 130% 0;
+    }
+    to {
+      background-position: 0% 0;
+    }
+  }
+
+  /* ── Infrastructure ─────────────────────────────────────────────────────── */
+  .infra-statement {
+    max-width: 22ch;
+    margin-top: var(--space-8);
+    text-wrap: balance;
+  }
+
+  .infra-support {
+    color: var(--text-tertiary);
+    margin-top: var(--space-6);
+    max-width: 44ch;
+  }
+
+  /* ── Products showcase ──────────────────────────────────────────────────── */
+  .products-heading {
+    max-width: 24ch;
+    margin-top: var(--space-8);
+  }
+
+  .products-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--grid-gap);
+    margin-top: var(--space-12);
+  }
+
+  @media (min-width: 900px) {
+    .products-grid {
+      grid-template-columns: repeat(2, minmax(0, min(520px, 42vw)));
+    }
+  }
+
+  .product-card {
+    display: flex;
+    flex-direction: column;
+    min-height: 620px;
+    padding: var(--space-10);
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  .product-card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: var(--space-4);
+  }
+
+  .product-index {
+    color: var(--text-tertiary);
+  }
+
+  .product-arrow {
+    display: inline-flex;
+    color: var(--text-secondary);
+    transition: transform var(--motion-hover-duration) var(--ease-out);
+  }
+
+  .product-tagline {
+    color: var(--text-secondary);
+    margin-top: var(--space-2);
+  }
+
+  .product-supporting {
+    color: var(--text-tertiary);
+    margin-top: var(--space-4);
+    max-width: 40ch;
+  }
+
+  /* Preview occupies 50–60% of card height. */
+  .product-preview {
+    flex: 1;
+    min-height: 330px;
+    margin-top: var(--space-8);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--surface-elevated);
+  }
+
+  .product-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top;
+    display: block;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .product-preview img {
+      transition: transform var(--motion-hover-duration) var(--ease-out);
+    }
+
+    .product-card:hover .product-preview img,
+    .product-card:focus-visible .product-preview img {
+      transform: scale(1.02);
+    }
+
+    .product-card:hover .product-arrow,
+    .product-card:focus-visible .product-arrow {
+      transform: translate(4px, -4px);
+    }
+  }
+
+  /* Focus family for keyboard users — mirrors the hover dimming. */
+  .focus-group:focus-within .focus-item {
+    opacity: var(--focus-dim-opacity);
+    transition: opacity var(--motion-hover-duration) var(--ease-out);
+  }
+
+  .focus-group .focus-item:focus-within {
+    opacity: 1;
+  }
+
+  /* ── Gateways — quieter than product cards ──────────────────────────────── */
+  .gateways-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--grid-gap);
+  }
+
+  @media (min-width: 720px) {
+    .gateways-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .gateway-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+    min-height: 220px;
+    padding: var(--space-10);
+    text-align: left;
+    cursor: pointer;
+    background: transparent;
+  }
+
+  .gateway-desc {
+    color: var(--text-tertiary);
+  }
+
+  .gateway-arrow {
+    display: inline-flex;
+    margin-top: auto;
+    padding-top: var(--space-5);
+    color: var(--text-secondary);
+    transition: transform var(--motion-hover-duration) var(--ease-out);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .gateway-card:hover .gateway-arrow,
+    .gateway-card:focus-visible .gateway-arrow {
+      transform: translate(4px, -4px);
+    }
+  }
+
+  /* ── Responsive refinements ─────────────────────────────────────────────── */
+  @media (max-width: 720px) {
+    .hero {
+      min-height: 88svh;
+    }
+
+    .reality {
+      min-height: 160svh;
+    }
+
+    .product-card {
+      min-height: 560px;
+    }
+
+    .product-preview {
+      min-height: 280px;
+    }
+  }
+}
