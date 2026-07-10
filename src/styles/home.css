@@ -22,6 +22,13 @@
       transform: none;
       clip-path: inset(0 0 0 0);
     }
+
+    /* Once revealed, the clip box is removed entirely so hover lifts and
+       card shadows inside the wrapper are never cut. */
+    .reveal.done {
+      clip-path: none;
+      transition: none;
+    }
   }
 
   /* Shared quiet section label (slate — the gradient is reserved). */
