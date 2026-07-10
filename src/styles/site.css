@@ -26,7 +26,7 @@
   .site-header-inner {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
     height: var(--space-16);
   }
 
@@ -44,41 +44,6 @@
 
   .site-header-brand:hover {
     opacity: 0.7;
-  }
-
-  .site-nav {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-  }
-
-  .site-nav-link {
-    display: inline-flex;
-    align-items: center;
-    height: var(--control-height-sm);
-    padding-inline: var(--space-4);
-    border-radius: var(--radius-pill);
-    border: 0;
-    background: none;
-    color: var(--text-tertiary);
-    font-family: var(--font-sans);
-    font-size: var(--type-body-sm-size);
-    font-weight: 600;
-    letter-spacing: var(--tracking-body);
-    cursor: pointer;
-    transition:
-      color var(--motion-hover-duration) var(--ease-out),
-      background-color var(--motion-hover-duration) var(--ease-out);
-  }
-
-  .site-nav-link:hover {
-    color: var(--text-primary);
-  }
-
-  /* Active page: quiet, precise — no decorative gradient by default. */
-  .site-nav-link[aria-current="page"] {
-    color: var(--text-primary);
-    background: var(--surface-subtle);
   }
 
   /* ── Footer ─────────────────────────────────────────────────────────────── */

@@ -4,11 +4,8 @@ import { VisuallyHidden } from "../primitives";
 
 export type Page = "home" | "about" | "products";
 
-const NAV_ITEMS: Array<{ label: string; page: Page }> = [
-  { label: "About", page: "about" },
-  { label: "Products", page: "products" },
-];
-
+/* Minimal header: the centered Ozey wordmark only. Navigation into
+   About and Products happens through the gateway cards. */
 export function Header({ page, onNav }: { page: Page; onNav: (p: Page) => void }) {
   const [scrolled, setScrolled] = useState(false);
 
@@ -34,19 +31,6 @@ export function Header({ page, onNav }: { page: Page; onNav: (p: Page) => void }
           <OzeyWordmark height={18} />
           <VisuallyHidden>Ozey — home</VisuallyHidden>
         </button>
-        <nav className="site-nav" aria-label="Main">
-          {NAV_ITEMS.map((item) => (
-            <button
-              key={item.page}
-              type="button"
-              className="site-nav-link"
-              aria-current={page === item.page ? "page" : undefined}
-              onClick={() => onNav(item.page)}
-            >
-              {item.label}
-            </button>
-          ))}
-        </nav>
       </div>
     </header>
   );
