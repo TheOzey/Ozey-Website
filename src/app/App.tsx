@@ -29,15 +29,15 @@ function HeroBg() {
     <>
       {/* Top radial glow — foreground at 8% opacity bleeding from the very top */}
       <div aria-hidden className="absolute inset-0 pointer-events-none"
-        style={{ background: "radial-gradient(35% 80% at 49% 0%, rgba(255,255,255,0.08), transparent)" }} />
+        style={{ background: "radial-gradient(35% 80% at 49% 0%, rgba(148,163,184,0.08), transparent)" }} />
 
       {/* Outer container lines — visible on lg+, fade out at 80% height */}
       <div aria-hidden className="absolute inset-0 hidden lg:block pointer-events-none">
         <div className="relative mx-auto h-full" style={{ maxWidth: 1200 }}>
           <div className="absolute inset-y-0 left-0 w-px"
-            style={{ background: "rgba(255,255,255,0.15)", WebkitMaskImage: "linear-gradient(to bottom, black 80%, transparent 100%)", maskImage: "linear-gradient(to bottom, black 80%, transparent 100%)" }} />
+            style={{ background: "var(--border-default)", WebkitMaskImage: "linear-gradient(to bottom, black 80%, transparent 100%)", maskImage: "linear-gradient(to bottom, black 80%, transparent 100%)" }} />
           <div className="absolute inset-y-0 right-0 w-px"
-            style={{ background: "rgba(255,255,255,0.15)", WebkitMaskImage: "linear-gradient(to bottom, black 80%, transparent 100%)", maskImage: "linear-gradient(to bottom, black 80%, transparent 100%)" }} />
+            style={{ background: "var(--border-default)", WebkitMaskImage: "linear-gradient(to bottom, black 80%, transparent 100%)", maskImage: "linear-gradient(to bottom, black 80%, transparent 100%)" }} />
         </div>
       </div>
 
@@ -45,13 +45,13 @@ function HeroBg() {
       <div aria-hidden className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="relative mx-auto h-full" style={{ maxWidth: 1200 }}>
           <div className="absolute inset-y-0 left-4 md:left-8 w-px"
-            style={{ background: "linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.1) 100%)" }} />
+            style={{ background: "linear-gradient(to bottom, transparent 0%, var(--border-subtle) 50%, var(--border-subtle) 100%)" }} />
           <div className="absolute inset-y-0 right-4 md:right-8 w-px"
-            style={{ background: "linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.1) 100%)" }} />
+            style={{ background: "linear-gradient(to bottom, transparent 0%, var(--border-subtle) 50%, var(--border-subtle) 100%)" }} />
           <div className="absolute inset-y-0 left-8 md:left-12 w-px"
-            style={{ background: "linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.05) 100%)" }} />
+            style={{ background: "linear-gradient(to bottom, transparent 0%, var(--grid-subtle) 50%, var(--grid-subtle) 100%)" }} />
           <div className="absolute inset-y-0 right-8 md:right-12 w-px"
-            style={{ background: "linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.05) 100%)" }} />
+            style={{ background: "linear-gradient(to bottom, transparent 0%, var(--grid-subtle) 50%, var(--grid-subtle) 100%)" }} />
         </div>
       </div>
     </>
@@ -61,7 +61,7 @@ function HeroBg() {
 // ─── Hero section ─────────────────────────────────────────────────────────────
 function HeroSection() {
   return (
-    <section className="relative w-full overflow-hidden flex flex-col items-center justify-center" style={{ minHeight: 700, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+    <section className="relative w-full overflow-hidden flex flex-col items-center justify-center" style={{ minHeight: 700, borderBottom: "1px solid var(--border-subtle)" }}>
       <HeroBg />
       {/* Content */}
       <div className="relative z-10 flex flex-col items-center gap-10 text-center px-6">
@@ -132,7 +132,7 @@ function RespectGapSection() {
       <div className="w-full max-w-[1200px] mx-auto px-6 md:px-0 py-20">
         <motion.div
           className="w-full flex flex-col gap-3 px-10 md:px-14 py-14"
-          style={{ border: "1px solid rgba(255,255,255,0.12)", borderRadius: 50, background: "rgba(255,255,255,0.01)" }}
+          style={{ border: "1px solid var(--border-default)", borderRadius: "var(--radius-2xl)", background: "var(--surface-section)" }}
           initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}>
           <p style={{ fontFamily: SF, fontWeight: 590, fontSize: "clamp(22px,2.4vw,36px)", letterSpacing: "-1.08px", lineHeight: 1.15, color: MUTED }}>
@@ -189,21 +189,17 @@ function ProductCard({
   const [hovered, setHovered] = useState(false);
 
   // Glossy gradient border: bright top-left (light source), dims toward bottom-right, subtle bottom sheen
-  const glossBorder = hovered
-    ? "linear-gradient(145deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.18) 30%, rgba(255,255,255,0.04) 58%, rgba(255,255,255,0.22) 100%)"
-    : "linear-gradient(145deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.07) 30%, rgba(255,255,255,0.02) 58%, rgba(255,255,255,0.1) 100%)";
+  const cardBorder = hovered ? "var(--border-strong)" : "var(--border-subtle)";
 
   return (
     <motion.div
       ref={ref}
       className="relative cursor-pointer"
       style={{
-        borderRadius: 35,
+        borderRadius: "var(--radius-product-card)",
         padding: 1,
-        background: glossBorder,
-        boxShadow: hovered
-          ? "0 40px 100px rgba(0,0,0,0.65), 0 0 0 0 transparent"
-          : "0 24px 64px rgba(0,0,0,0.45)",
+        background: cardBorder,
+        boxShadow: hovered ? "var(--shadow-card-hover)" : "var(--shadow-card)",
         transform: hovered ? "translateY(-6px)" : "translateY(0px)",
         transition: "transform 0.4s cubic-bezier(0.16,1,0.3,1), box-shadow 0.4s cubic-bezier(0.16,1,0.3,1), background 0.35s ease",
         height: 667,
@@ -215,11 +211,11 @@ function ProductCard({
       onMouseLeave={() => setHovered(false)}
     >
       {/* Inner card — sits inside the 1px glossy gradient wrapper */}
-      <div className="flex flex-col overflow-hidden" style={{ borderRadius: 34, background: "rgba(22, 26, 32, 0.92)", height: "100%" }}>
+      <div className="flex flex-col overflow-hidden" style={{ borderRadius: "calc(var(--radius-product-card) - 1px)", background: "var(--surface-card)", height: "100%" }}>
         {/* Text zone */}
         <div style={{ padding: "46px 36px 28px", flexShrink: 0 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-            <span style={{ fontFamily: SF, fontSize: 14, fontWeight: 400, color: "rgba(255,255,255,0.35)", letterSpacing: "-0.01em" }}>
+            <span style={{ fontFamily: SF, fontSize: 14, fontWeight: 400, color: "var(--text-tertiary)", letterSpacing: "-0.01em" }}>
               {num}
             </span>
             <motion.div
@@ -235,12 +231,12 @@ function ProductCard({
           <h3 style={{ fontFamily: SF, fontWeight: 590, fontSize: "clamp(24px,2.4vw,36px)", color: FG, letterSpacing: "-1.08px", lineHeight: 1.1, marginBottom: 6 }}>
             {name}
           </h3>
-          <p style={{ fontFamily: SF, fontWeight: 400, fontSize: 16, color: "rgba(255,255,255,0.5)", letterSpacing: "-0.01em", marginBottom: 14 }}>
+          <p style={{ fontFamily: SF, fontWeight: 400, fontSize: 16, color: "var(--text-secondary)", letterSpacing: "-0.01em", marginBottom: 14 }}>
             {tagline}
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
             {copy.map((line, i) => (
-              <span key={i} style={{ fontFamily: SF, fontWeight: 400, fontSize: 14, color: "#cbd5e1", lineHeight: 1.6 }}>
+              <span key={i} style={{ fontFamily: SF, fontWeight: 400, fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.6 }}>
                 {line}
               </span>
             ))}
@@ -322,9 +318,9 @@ function GatewayCard({ label, heading, desc, target, onNav }: {
       className="relative overflow-hidden text-left w-full cursor-pointer flex flex-col"
       style={{
         padding: "100px 46px",
-        border: `1px solid ${hov ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.1)"}`,
-        borderRadius: 30,
-        background: hov ? "rgba(255,255,255,0.02)" : "transparent",
+        border: `1px solid ${hov ? "var(--border-strong)" : "var(--border-subtle)"}`,
+        borderRadius: "var(--radius-gateway-card)",
+        background: hov ? "var(--surface-section)" : "transparent",
         transition: "border-color 0.25s, background 0.25s",
         minHeight: 320,
       }}
@@ -341,7 +337,7 @@ function GatewayCard({ label, heading, desc, target, onNav }: {
       </p>
       <motion.div
         className="flex items-center justify-center rounded-full"
-        style={{ width: 36, height: 36, border: "1px solid rgba(255,255,255,0.2)", background: hov ? FG : "transparent", transition: "background 0.25s", marginTop: 24 }}
+        style={{ width: 36, height: 36, border: "1px solid var(--border-default)", background: hov ? FG : "transparent", transition: "background 0.25s", marginTop: 24 }}
         animate={{ x: hov ? 3 : 0, y: hov ? -3 : 0 }}
         transition={{ duration: 0.25 }}>
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -391,12 +387,12 @@ function AboutRow({ r, i }: { r: typeof ABOUT_ROWS[number]; i: number }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref as React.RefObject<Element>, { once: true, margin: "-8%" });
   return (
-    <motion.div ref={ref} className="py-14" style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}
+    <motion.div ref={ref} className="py-14" style={{ borderTop: "1px solid var(--border-subtle)" }}
       initial={{ opacity: 0, y: 10 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.7, delay: i * 0.04 }}>
       <div className="grid gap-8" style={{ gridTemplateColumns: "2.5rem 1fr 1fr" }}>
         <span className="font-mono text-xs pt-1" style={{ color: BLUE, opacity: 0.6 }}>{r.id}</span>
         <h3 style={{ fontFamily: SF, color: FG, fontSize: "clamp(17px,1.5vw,22px)", fontWeight: 500, letterSpacing: "-0.02em" }}>{r.title}</h3>
-        <p style={{ fontFamily: SF, color: "rgba(255,255,255,0.38)", fontSize: "clamp(13px,1vw,15px)", lineHeight: 1.75, fontWeight: 300 }}>{r.body}</p>
+        <p style={{ fontFamily: SF, color: "var(--text-tertiary)", fontSize: "clamp(13px,1vw,15px)", lineHeight: 1.75, fontWeight: 300 }}>{r.body}</p>
       </div>
     </motion.div>
   );
@@ -405,7 +401,7 @@ function AboutRow({ r, i }: { r: typeof ABOUT_ROWS[number]; i: number }) {
 function AboutPage() {
   return (
     <div className="min-h-screen pt-28 px-10 md:px-24 lg:px-36 py-20"
-      style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)", backgroundSize: "60px 60px" }}>
+      style={{ backgroundImage: "linear-gradient(var(--grid-subtle) 1px, transparent 1px), linear-gradient(90deg, var(--grid-subtle) 1px, transparent 1px)", backgroundSize: "60px 60px" }}>
       <div className="mb-28">
         <span className="block text-xs font-medium tracking-[0.2em] uppercase mb-8" style={{ fontFamily: SF, color: BLUE }}>About — Blueprint</span>
         <h1 style={{ fontFamily: SF, fontWeight: 600, fontSize: "clamp(52px,10vw,130px)", letterSpacing: "-0.045em", color: FG, lineHeight: 0.92 }}>
@@ -451,7 +447,7 @@ function ProductPageCard({ p, i }: { p: typeof PRODUCTS_LIST[number]; i: number 
         <p style={{ fontFamily: SF, color: BLUE, fontSize: 14 }}>{p.tagline}</p>
         <AnimatePresence>
           {open && (
-            <motion.p style={{ fontFamily: SF, color: "rgba(255,255,255,0.36)", fontWeight: 300, fontSize: 13, lineHeight: 1.7 }}
+            <motion.p style={{ fontFamily: SF, color: "var(--text-tertiary)", fontWeight: 300, fontSize: 13, lineHeight: 1.7 }}
               initial={{ opacity: 0, height: 0, marginTop: 0 }} animate={{ opacity: 1, height: "auto", marginTop: "1.25rem" }}
               exit={{ opacity: 0, height: 0, marginTop: 0 }} transition={{ duration: 0.3 }}>
               {p.desc}
@@ -459,9 +455,9 @@ function ProductPageCard({ p, i }: { p: typeof PRODUCTS_LIST[number]; i: number 
           )}
         </AnimatePresence>
         <div className="flex items-center gap-2 mt-7">
-          <span style={{ fontFamily: SF, fontSize: 12, color: "rgba(255,255,255,0.3)" }}>{open ? "Collapse" : "Expand"}</span>
+          <span style={{ fontFamily: SF, fontSize: 12, color: "var(--text-muted)" }}>{open ? "Collapse" : "Expand"}</span>
           <motion.span animate={{ rotate: open ? 45 : 0 }}
-            style={{ color: hov ? BLUE : "rgba(255,255,255,0.3)", transition: "color 0.2s", display: "inline-block", lineHeight: 1 }}>+</motion.span>
+            style={{ color: hov ? BLUE : "var(--text-muted)", transition: "color 0.2s", display: "inline-block", lineHeight: 1 }}>+</motion.span>
         </div>
       </div>
     </motion.div>
