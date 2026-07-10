@@ -232,7 +232,7 @@
 
   .respect-gap-phrase.is-signaled {
     background-image: var(--gradient-intelligence);
-    background-size: 220% 100%;
+    background-size: 100% 100%;
     background-position: 0% 0;
     -webkit-background-clip: text;
     background-clip: text;
@@ -247,9 +247,11 @@
 
   @keyframes gap-travel {
     from {
-      background-position: 130% 0;
+      background-size: 220% 100%;
+      background-position: 135% 0;
     }
     to {
+      background-size: 100% 100%;
       background-position: 0% 0;
     }
   }
@@ -382,6 +384,7 @@
   }
 
   .gateway-card {
+    width: 100%;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
