@@ -13,13 +13,12 @@ import type { Page } from "../components/site/Header";
  * deepens, preview 1.02, arrow travels, sibling quiets to 88%, one
  * brief gradient signal on the border).
  *
- * Product URLs are not configured yet — cards route to the Products
- * page until real destinations exist (see PRODUCT_URLS).
+ * Each card links to its product's live destination.
  */
 
 const PRODUCT_URLS: Record<string, string | null> = {
-  Spendrova: null, // TODO: set the live Spendrova URL when configured
-  "Ozey SHG": null, // TODO: set the live Ozey SHG URL when configured
+  Spendrova: "https://spendrova.com",
+  "Ozey SHG": "https://shg.ozey.in",
 };
 
 const PRODUCTS = [
@@ -88,7 +87,12 @@ export function ProductsShowcase({ onNav }: { onNav: (p: Page) => void }) {
           <span className="type-label-md type-label-caps section-label">Products</span>
         </Reveal>
         <Reveal as="h2" delay={120} className="type-heading-xl products-heading">
-          Proof, not promises.
+          Focused systems, built for real work.
+        </Reveal>
+        <Reveal delay={220}>
+          <p className="type-body-lg products-support">
+            Two products today. More taking shape carefully.
+          </p>
         </Reveal>
         <div className="products-grid focus-group">
           {PRODUCTS.map((p, i) => (
