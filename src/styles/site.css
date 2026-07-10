@@ -1,0 +1,134 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   OZEY SITE CHROME — shared header and footer styling.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@layer components {
+  /* ── Header ─────────────────────────────────────────────────────────────── */
+  .site-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: var(--z-header);
+    border-bottom: 1px solid transparent;
+    background: transparent;
+    transition:
+      background-color var(--motion-hover-duration) var(--ease-out),
+      border-color var(--motion-hover-duration) var(--ease-out);
+  }
+
+  .site-header.is-scrolled {
+    background: rgba(5, 6, 7, 0.86);
+    backdrop-filter: blur(12px);
+    border-bottom-color: var(--border-subtle);
+  }
+
+  .site-header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: var(--space-16);
+  }
+
+  .site-header-brand {
+    display: inline-flex;
+    align-items: center;
+    color: var(--text-primary);
+    background: none;
+    border: 0;
+    padding: var(--space-2);
+    margin: calc(-1 * var(--space-2));
+    cursor: pointer;
+    transition: opacity var(--motion-hover-duration) var(--ease-out);
+  }
+
+  .site-header-brand:hover {
+    opacity: 0.7;
+  }
+
+  .site-nav {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .site-nav-link {
+    display: inline-flex;
+    align-items: center;
+    height: var(--control-height-sm);
+    padding-inline: var(--space-4);
+    border-radius: var(--radius-pill);
+    border: 0;
+    background: none;
+    color: var(--text-tertiary);
+    font-family: var(--font-sans);
+    font-size: var(--type-body-sm-size);
+    font-weight: 600;
+    letter-spacing: var(--tracking-body);
+    cursor: pointer;
+    transition:
+      color var(--motion-hover-duration) var(--ease-out),
+      background-color var(--motion-hover-duration) var(--ease-out);
+  }
+
+  .site-nav-link:hover {
+    color: var(--text-primary);
+  }
+
+  /* Active page: quiet, precise — no decorative gradient by default. */
+  .site-nav-link[aria-current="page"] {
+    color: var(--text-primary);
+    background: var(--surface-subtle);
+  }
+
+  /* ── Footer ─────────────────────────────────────────────────────────────── */
+  .site-footer {
+    border-top: 1px solid var(--border-subtle);
+    padding-block: var(--space-12) var(--space-10);
+    background: var(--surface-canvas);
+  }
+
+  .site-footer-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-8);
+  }
+
+  .site-footer-brand {
+    color: var(--text-primary);
+    display: inline-flex;
+  }
+
+  .site-footer-email {
+    color: var(--text-tertiary);
+    font-size: var(--type-body-sm-size);
+    letter-spacing: var(--tracking-body);
+    text-decoration: none;
+    transition: color var(--motion-hover-duration) var(--ease-out);
+  }
+
+  .site-footer-email:hover {
+    color: var(--text-primary);
+  }
+
+  .site-footer-social {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .site-footer-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-8);
+    margin-top: var(--space-10);
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--border-subtle);
+    color: var(--text-muted);
+    font-size: var(--type-label-md-size);
+    letter-spacing: var(--tracking-body);
+  }
+}
