@@ -313,6 +313,24 @@
     /* Premium physical movement — slower than the default hover. */
     --card-hover-duration: 400ms;
     transition-duration: var(--card-hover-duration);
+    will-change: transform;
+  }
+
+  /* Glassy brand border: the signal gradient fades in translucently on
+     hover/focus, over the neutral border — never present at rest. */
+  .product-card.signal-border::before {
+    transition-duration: var(--card-hover-duration);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .product-card:hover,
+    .product-card:focus-visible {
+      transform: translateY(-4px) scale(1.02);
+      box-shadow:
+        var(--shadow-card-hover),
+        0 0 var(--blur-soft) rgba(57, 198, 232, 0.08),
+        0 0 var(--blur-medium) rgba(123, 97, 255, 0.06);
+    }
   }
 
   .product-platform {
@@ -367,15 +385,6 @@
   }
 
   @media (prefers-reduced-motion: no-preference) {
-    .product-preview img {
-      transition: transform var(--card-hover-duration, 400ms) var(--ease-out);
-    }
-
-    .product-card:hover .product-preview img,
-    .product-card:focus-visible .product-preview img {
-      transform: scale(1.02);
-    }
-
     .product-card:hover .product-cta svg,
     .product-card:focus-visible .product-cta svg {
       transform: translate(3px, -3px);

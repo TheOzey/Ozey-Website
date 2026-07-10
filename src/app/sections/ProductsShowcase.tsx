@@ -11,9 +11,10 @@ import type { Page } from "../components/site/Header";
  * matching the locked Figma pattern: product name, muted platform line,
  * three benefit lines, a large free-floating preview in the lower half,
  * and a circular arrow control pinned bottom-right. Each card is one
- * keyboard-accessible link. Hover stays quiet and physical: 4px lift,
- * slightly brighter border, deeper shadow, preview scales to 1.02,
- * arrow nudges along the slash angle, sibling quiets to 88%.
+ * keyboard-accessible link. On hover the card lifts 4px and zooms 2%
+ * toward the viewer while a translucent brand-gradient border and a
+ * soft glassy glow fade in; the arrow nudges along the slash angle and
+ * the sibling quiets to 88%.
  *
  * Each card links to its product's live destination.
  */
@@ -60,7 +61,7 @@ function ProductCard({
     <a
       className={clsx(
         "card-surface card-surface-product card-interactive",
-        "product-card focus-item",
+        "product-card focus-item signal-border",
       )}
       href={href ?? "#products"}
       onClick={handleClick}
