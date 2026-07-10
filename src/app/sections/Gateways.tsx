@@ -34,8 +34,8 @@ export function Gateways({ onNav }: { onNav: (p: Page) => void }) {
                 className="gateway-card card-surface card-interactive"
                 onClick={() => onNav(g.target)}
               >
-                <span className="type-label-md type-label-caps section-label">{g.label}</span>
-                <span className="type-heading-lg">{g.heading}</span>
+                <span className="type-label-sm type-label-caps section-label">{g.label}</span>
+                <span className="type-heading-md">{g.heading}</span>
                 <span className="type-body-sm gateway-desc">{g.desc}</span>
                 <span className="gateway-arrow" aria-hidden>
                   <ArrowUpRightIcon size="inline" />

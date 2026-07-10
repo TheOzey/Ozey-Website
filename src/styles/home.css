@@ -283,24 +283,28 @@
   .products-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: var(--grid-gap);
-    margin-top: var(--space-12);
+    gap: var(--space-8);
+    margin-top: var(--space-16);
   }
 
   @media (min-width: 900px) {
     .products-grid {
-      grid-template-columns: repeat(2, minmax(0, min(520px, 42vw)));
+      grid-template-columns: repeat(2, minmax(0, min(420px, 34vw)));
+      gap: var(--space-8);
     }
   }
 
   .product-card {
     display: flex;
     flex-direction: column;
-    min-height: 620px;
+    min-height: 700px;
     padding: var(--space-10);
     text-decoration: none;
     color: inherit;
     cursor: pointer;
+    /* Premium physical movement — slower than the default hover. */
+    --card-hover-duration: 400ms;
+    transition-duration: var(--card-hover-duration);
   }
 
   .product-card-head {
@@ -317,7 +321,7 @@
   .product-arrow {
     display: inline-flex;
     color: var(--text-secondary);
-    transition: transform var(--motion-hover-duration) var(--ease-out);
+    transition: transform var(--card-hover-duration, 400ms) var(--ease-out);
   }
 
   .product-tagline {
@@ -331,11 +335,12 @@
     max-width: 40ch;
   }
 
-  /* Preview occupies 50–60% of card height. */
+  /* Bottom-anchored preview: ~55% of card height. The space between the
+     copy and the preview is deliberate negative space — do not fill it. */
   .product-preview {
-    flex: 1;
-    min-height: 330px;
-    margin-top: var(--space-8);
+    margin-top: auto;
+    padding-top: var(--space-10);
+    min-height: 380px;
     border-radius: var(--radius-md);
     overflow: hidden;
     background: var(--surface-elevated);
@@ -351,7 +356,7 @@
 
   @media (prefers-reduced-motion: no-preference) {
     .product-preview img {
-      transition: transform var(--motion-hover-duration) var(--ease-out);
+      transition: transform var(--card-hover-duration, 400ms) var(--ease-out);
     }
 
     .product-card:hover .product-preview img,
@@ -361,7 +366,7 @@
 
     .product-card:hover .product-arrow,
     .product-card:focus-visible .product-arrow {
-      transform: translate(4px, -4px);
+      transform: translate(6px, -6px);
     }
   }
 
@@ -379,12 +384,13 @@
   .gateways-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: var(--grid-gap);
+    gap: var(--space-8);
   }
 
-  @media (min-width: 720px) {
+  @media (min-width: 900px) {
     .gateways-grid {
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(2, minmax(0, min(420px, 34vw)));
+      gap: var(--space-8);
     }
   }
 
@@ -393,12 +399,13 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: var(--space-3);
-    min-height: 220px;
-    padding: var(--space-10);
+    gap: var(--space-2);
+    min-height: 176px;
+    padding: var(--space-8);
     text-align: left;
     cursor: pointer;
     background: transparent;
+    transition-duration: 400ms;
   }
 
   .gateway-desc {
@@ -408,15 +415,15 @@
   .gateway-arrow {
     display: inline-flex;
     margin-top: auto;
-    padding-top: var(--space-5);
+    padding-top: var(--space-4);
     color: var(--text-secondary);
-    transition: transform var(--motion-hover-duration) var(--ease-out);
+    transition: transform 400ms var(--ease-out);
   }
 
   @media (prefers-reduced-motion: no-preference) {
     .gateway-card:hover .gateway-arrow,
     .gateway-card:focus-visible .gateway-arrow {
-      transform: translate(4px, -4px);
+      transform: translate(6px, -6px);
     }
   }
 
@@ -431,11 +438,11 @@
     }
 
     .product-card {
-      min-height: 560px;
+      min-height: 620px;
     }
 
     .product-preview {
-      min-height: 280px;
+      min-height: 330px;
     }
   }
 }

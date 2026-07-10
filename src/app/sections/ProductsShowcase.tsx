@@ -7,11 +7,12 @@ import { ArrowUpRightIcon } from "../components/icons";
 import type { Page } from "../components/site/Header";
 
 /**
- * Products — proof of the infrastructure. Two gateway cards with the
- * locked geometry; each is one link, keyboard accessible, with the
- * locked hover choreography (lift 4px, border strengthens, shadow
- * deepens, preview 1.02, arrow travels, sibling quiets to 88%, one
- * brief gradient signal on the border).
+ * Products — proof of the infrastructure. Two portrait editorial cards;
+ * each is one link, keyboard accessible. Hover is quiet and physical:
+ * 4px lift, slightly brighter border, slightly deeper shadow, preview
+ * scales to 1.02, arrow travels 6px along the slash angle, sibling
+ * quiets to 88%. No gradient border, no glow — the card moves toward
+ * the user like a premium object.
  *
  * Each card links to its product's live destination.
  */
@@ -57,7 +58,7 @@ function ProductCard({
     <a
       className={clsx(
         "card-surface card-surface-product card-interactive",
-        "product-card focus-item signal-border",
+        "product-card focus-item",
       )}
       href={href ?? "#products"}
       onClick={handleClick}
