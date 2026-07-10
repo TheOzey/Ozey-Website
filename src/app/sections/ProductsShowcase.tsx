@@ -7,12 +7,13 @@ import { ArrowUpRightIcon } from "../components/icons";
 import type { Page } from "../components/site/Header";
 
 /**
- * Products — proof of the infrastructure. Two portrait editorial cards;
- * each is one link, keyboard accessible. Hover is quiet and physical:
- * 4px lift, slightly brighter border, slightly deeper shadow, preview
- * scales to 1.02, arrow travels 6px along the slash angle, sibling
- * quiets to 88%. No gradient border, no glow — the card moves toward
- * the user like a premium object.
+ * Products — proof of the infrastructure. Two portrait editorial cards
+ * matching the locked Figma pattern: product name, muted platform line,
+ * three benefit lines, a large free-floating preview in the lower half,
+ * and a circular arrow control pinned bottom-right. Each card is one
+ * keyboard-accessible link. Hover stays quiet and physical: 4px lift,
+ * slightly brighter border, deeper shadow, preview scales to 1.02,
+ * arrow nudges along the slash angle, sibling quiets to 88%.
  *
  * Each card links to its product's live destination.
  */
@@ -24,18 +25,19 @@ const PRODUCT_URLS: Record<string, string | null> = {
 
 const PRODUCTS = [
   {
-    index: "01",
     name: "Spendrova",
-    tagline: "Clarity for recurring spending.",
-    supporting: "See subscriptions, renewals and recurring costs in one focused view.",
+    platform: "Subscription Intelligence Platform",
+    lines: [
+      "Know every recurring payment.",
+      "Never miss a renewal.",
+      "Savings that happen automatically.",
+    ],
     image: imgSpendrova,
   },
   {
-    index: "02",
     name: "Ozey SHG",
-    tagline: "Simple systems for community-led finance.",
-    supporting:
-      "Manage members, savings, meetings, loans and records without changing how the group already works.",
+    platform: "Community Finance",
+    lines: ["Savings groups, organized.", "Member meeting records.", "Loans tracked."],
     image: imgShg,
   },
 ];
@@ -62,20 +64,24 @@ function ProductCard({
       )}
       href={href ?? "#products"}
       onClick={handleClick}
+      aria-label={`${product.name} — ${product.platform}`}
       {...(href ? { target: "_blank", rel: "noopener noreferrer" } : {})}
     >
-      <div className="product-card-head">
-        <span className="type-mono product-index">{product.index}</span>
-        <span className="product-arrow" aria-hidden>
-          <ArrowUpRightIcon size="cardAction" />
-        </span>
-      </div>
       <h3 className="type-heading-lg">{product.name}</h3>
-      <p className="type-body-md product-tagline">{product.tagline}</p>
-      <p className="type-body-sm product-supporting">{product.supporting}</p>
+      <p className="type-body-md product-platform">{product.platform}</p>
+      <ul className="product-lines" role="list">
+        {product.lines.map((line) => (
+          <li key={line} className="type-body-lg">
+            {line}
+          </li>
+        ))}
+      </ul>
       <div className="product-preview">
         <img src={product.image} alt={`${product.name} app preview`} loading="lazy" />
       </div>
+      <span className="product-cta" aria-hidden>
+        <ArrowUpRightIcon size="cardAction" />
+      </span>
     </a>
   );
 }

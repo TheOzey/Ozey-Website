@@ -302,6 +302,7 @@
   }
 
   .product-card {
+    position: relative;
     display: flex;
     flex-direction: column;
     min-height: 700px;
@@ -309,56 +310,64 @@
     text-decoration: none;
     color: inherit;
     cursor: pointer;
+    overflow: hidden;
     /* Premium physical movement — slower than the default hover. */
     --card-hover-duration: 400ms;
     transition-duration: var(--card-hover-duration);
   }
 
-  .product-card-head {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    margin-bottom: var(--space-4);
-  }
-
-  .product-index {
+  .product-platform {
     color: var(--text-tertiary);
-  }
-
-  .product-arrow {
-    display: inline-flex;
-    color: var(--text-secondary);
-    transition: transform var(--card-hover-duration, 400ms) var(--ease-out);
-  }
-
-  .product-tagline {
-    color: var(--text-secondary);
     margin-top: var(--space-2);
   }
 
-  .product-supporting {
-    color: var(--text-tertiary);
-    margin-top: var(--space-4);
-    max-width: 40ch;
+  .product-lines {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    list-style: none;
+    padding: 0;
+    margin: var(--space-16) 0 0;
+    color: var(--text-secondary);
   }
 
-  /* Bottom-anchored preview: ~55% of card height. The space between the
-     copy and the preview is deliberate negative space — do not fill it. */
+  /* Free-floating preview in the lower half of the card — no boxed panel.
+     The space above it is deliberate negative space. */
   .product-preview {
     margin-top: auto;
     padding-top: var(--space-10);
-    min-height: 380px;
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    background: var(--surface-elevated);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    min-height: 340px;
   }
 
   .product-preview img {
     width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: top;
+    height: auto;
+    max-height: 400px;
+    object-fit: contain;
     display: block;
+    border-radius: var(--radius-md);
+  }
+
+  /* Circular arrow control pinned bottom-right, over the preview zone. */
+  .product-cta {
+    position: absolute;
+    right: var(--space-10);
+    bottom: var(--space-10);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--control-height-lg);
+    height: var(--control-height-lg);
+    border-radius: var(--radius-pill);
+    background: var(--text-primary);
+    color: var(--text-inverse);
+  }
+
+  .product-cta svg {
+    transition: transform var(--card-hover-duration, 400ms) var(--ease-out);
   }
 
   @media (prefers-reduced-motion: no-preference) {
@@ -371,9 +380,9 @@
       transform: scale(1.02);
     }
 
-    .product-card:hover .product-arrow,
-    .product-card:focus-visible .product-arrow {
-      transform: translate(6px, -6px);
+    .product-card:hover .product-cta svg,
+    .product-card:focus-visible .product-cta svg {
+      transform: translate(3px, -3px);
     }
   }
 
