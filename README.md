@@ -1,11 +1,30 @@
+# Ozey Website
 
-  # Interactive website
+pnpm workspace containing the Ozey web properties.
 
-  This is a code bundle for Interactive website. The original project is available at https://www.figma.com/design/uOmwrRh8fH89VsXp41s7I1/Interactive-website.
+```
+sites/
+  ozey/     → ozey.in   (corporate)
+docs/       → design system and architecture notes
+```
 
-  ## Running the code
+## Requirements
 
-  Run `npm i` to install the dependencies.
+- Node.js 18+
+- pnpm 10+
 
-  Run `npm run dev` to start the development server.
-  
+## Getting started
+
+```bash
+pnpm install          # install all workspace dependencies (run from the repo root)
+pnpm dev              # start the corporate site dev server
+pnpm build            # build every site
+pnpm typecheck        # type-check every site
+```
+
+To work on a single site directly:
+
+```bash
+cd sites/ozey
+pnpm dev
+```

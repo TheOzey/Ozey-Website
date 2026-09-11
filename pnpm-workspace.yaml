@@ -1,7 +1,13 @@
 packages:
-  - '.'
+  - 'sites/*'
+
+onlyBuiltDependencies:
+  - '@tailwindcss/oxide'
+  - esbuild
+
 supportedArchitectures:
   os:
+    - darwin
     - linux
   cpu:
     - x64

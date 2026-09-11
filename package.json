@@ -1,44 +1,12 @@
 {
-  "name": "ozey-website",
+  "name": "ozey-web",
   "private": true,
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "typecheck": "tsc --noEmit"
-  },
-  "dependencies": {
-    "clsx": "2.1.1",
-    "lucide-react": "0.487.0",
-    "motion": "12.23.24",
-    "react": "18.3.1",
-    "react-dom": "18.3.1"
-  },
-  "devDependencies": {
-    "@tailwindcss/vite": "4.1.12",
-    "@types/react": "18.3.12",
-    "@types/react-dom": "18.3.1",
-    "@vitejs/plugin-react": "4.7.0",
-    "tailwindcss": "4.1.12",
-    "typescript": "5.6.3",
-    "vite": "6.3.5"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@tailwindcss/oxide",
-      "esbuild"
-    ],
-    "supportedArchitectures": {
-      "os": [
-        "darwin",
-        "linux"
-      ],
-      "cpu": [
-        "arm64",
-        "x64"
-      ]
-    }
+    "dev": "pnpm --filter @ozey/site-ozey dev",
+    "build": "pnpm -r build",
+    "preview": "pnpm --filter @ozey/site-ozey preview",
+    "typecheck": "pnpm -r typecheck"
   }
 }

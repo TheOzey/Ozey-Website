@@ -6,7 +6,9 @@ settings:
 
 importers:
 
-  .:
+  .: {}
+
+  sites/ozey:
     dependencies:
       clsx:
         specifier: 2.1.1
