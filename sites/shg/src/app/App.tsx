@@ -343,7 +343,16 @@ const screenSlideVariants = {
   exit: (d: number) => ({ x: d >= 0 ? "-100%" : "100%" }),
 };
 
-function PhoneMockup({ w = 260, h = 535, screenshot, hideIsland = false, direction = 1 }: { w?: number; h?: number; screenshot?: string; hideIsland?: boolean; direction?: number }) {
+// Crossfade used by the walkthrough: the app looks like it changes screens
+// rather than being swiped sideways.
+const screenFadeVariants = {
+  enter: { opacity: 0, scale: 1.015 },
+  center: { opacity: 1, scale: 1 },
+  exit: { opacity: 0, scale: 0.995 },
+};
+
+function PhoneMockup({ w = 260, h = 535, screenshot, hideIsland = false, direction = 1, screenTransition = "slide", placeholder }: { w?: number; h?: number; screenshot?: string; hideIsland?: boolean; direction?: number; screenTransition?: "slide" | "fade"; placeholder?: React.ReactNode }) {
+  const isFade = screenTransition === "fade";
   const cornerR = Math.round(w * 0.125);
   const bezel = Math.max(3, Math.round(w * 0.012));
   const screenCornerR = cornerR - bezel - 1;
@@ -734,9 +743,9 @@ function ProblemSection() {
 function ChapterContent({ chapter, isActive, stepNum }: { chapter: Chapter; isActive: boolean; stepNum: number }) {
   return (
     <motion.div
-      animate={{ opacity: isActive ? 1 : 0.22 }}
-      transition={{ duration: 0.35 }}
-      className="w-full md:max-w-xs"
+      animate={{ opacity: isActive ? 1 : 0.28 }}
+      transition={{ duration: 0.4 }}
+      className="w-full md:max-w-sm"
     >
       {/* Step line */}
       <div className="flex items-center gap-3 mb-5">
@@ -751,19 +760,19 @@ function ChapterContent({ chapter, isActive, stepNum }: { chapter: Chapter; isAc
 
       <h2
         className="font-medium text-[#1e293b] leading-[1.08] tracking-tight mb-4"
-        style={{ fontSize: "clamp(30px, 8.2vw, 48px)" }}
+        style={{ fontSize: "clamp(30px, 8.2vw, 44px)" }}
       >
         {chapter.headline}<br />
         <span className="font-extrabold text-[#00a697]">{chapter.accent}</span>
       </h2>
 
-      <p className="text-[15px] text-[#64748b] leading-relaxed mb-6 md:mb-8">{chapter.body}</p>
+      <p className="text-[15px] text-[#64748b] leading-relaxed mb-6 md:mb-7">{chapter.body}</p>
 
       <div className="space-y-3">
         {chapter.benefits.map((b, i) => (
           <motion.div
             key={b}
-            animate={{ opacity: isActive ? 1 : 0, x: isActive ? 0 : -8 }}
+            animate={{ opacity: isActive ? 1 : 0.35, x: isActive ? 0 : -6 }}
             transition={{ duration: 0.3, delay: isActive ? i * 0.07 : 0 }}
             className="flex items-center gap-3"
           >
@@ -778,46 +787,236 @@ function ChapterContent({ chapter, isActive, stepNum }: { chapter: Chapter; isAc
   );
 }
 
-function WalkthroughSection() {
-  const [activeIdx, setActiveIdx] = useState(0);
-  const [direction, setDirection] = useState(1);
-  const activeIdxRef = useRef(0);
-  const triggerRefs = useRef<(HTMLDivElement | null)[]>([]);
+/** Soft stand-in for chapters whose real app screen has not been supplied yet. */
+function ScreenPlaceholder({ chapter }: { chapter: Chapter }) {
+  const { Icon } = chapter;
+  return (
+    <div className="flex flex-col items-center gap-3 opacity-[0.18]">
+      <Icon size={44} className="text-[#00a697]" />
+      <span className="text-[11px] font-semibold tracking-widest uppercase text-[#00a697]">{chapter.label}</span>
+    </div>
+  );
+}
 
-  // Mobile phone size tracks the viewport: clamp(220px, 62vw, 300px)
-  const [phoneW, setPhoneW] = useState(240);
+const NAV_H = 64; // fixed header is h-16
+
+// ─── Desktop: sticky phone, scroll drives the screen ──────────────────────────
+
+function DesktopWalkthrough() {
+  const [activeIdx, setActiveIdx] = useState(0);
+  const chapterRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [vh, setVh] = useState(900);
+
   useEffect(() => {
-    const calc = () => setPhoneW(Math.round(Math.max(220, Math.min(window.innerWidth * 0.62, 300))));
+    const calc = () => setVh(window.innerHeight);
     calc();
     window.addEventListener("resize", calc);
     return () => window.removeEventListener("resize", calc);
   }, []);
-  const phoneH = (w: number, shot?: string) =>
-    shot ? Math.round((w - 6) * (2400 / 1080)) + 6 : Math.round(w * 2.04);
 
-  const handleEnter = useCallback((idx: number) => {
-    setDirection(idx >= activeIdxRef.current ? 1 : -1);
-    activeIdxRef.current = idx;
-    setActiveIdx(idx);
-  }, []);
+  // Whole device fits under the nav with breathing room; width follows the
+  // 1080x2400 screen aspect so the frame is never clipped or squashed.
+  const phoneH = Math.round(Math.min(680, Math.max(430, vh - 160)));
+  const phoneW = Math.round((phoneH - 6) / SCREEN_RATIO + 6);
 
   useEffect(() => {
-    const observers = CHAPTERS.map((_, idx) => {
-      const el = triggerRefs.current[idx];
-      if (!el) return null;
-      const obs = new IntersectionObserver(
-        ([entry]) => { if (entry.isIntersecting) handleEnter(idx); },
-        { threshold: 0.3, rootMargin: "-15% 0px -35% 0px" }
-      );
-      obs.observe(el);
-      return obs;
-    });
-    return () => observers.forEach(o => o?.disconnect());
-  }, [handleEnter]);
+    // A thin band across the middle of the viewport: exactly one chapter sits
+    // in it at a time, so the active screen never flickers at boundaries.
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            const idx = chapterRefs.current.indexOf(e.target as HTMLDivElement);
+            if (idx !== -1) setActiveIdx(idx);
+          }
+        });
+      },
+      { threshold: 0, rootMargin: "-45% 0px -45% 0px" }
+    );
+    chapterRefs.current.forEach((el) => el && obs.observe(el));
+    return () => obs.disconnect();
+  }, []);
 
-  const activeChapter = CHAPTERS[activeIdx];
-  const stepLabel = `${String(activeIdx + 1).padStart(2, "0")} / ${String(CHAPTERS.length).padStart(2, "0")}`;
+  const active = CHAPTERS[activeIdx];
 
+  return (
+    <div className="hidden md:block max-w-6xl mx-auto px-6">
+      <div className="grid grid-cols-2 gap-10 lg:gap-16">
+
+        {/* Left — sticky device, vertically centred in the space below the nav */}
+        <div
+          className="sticky flex items-center justify-center"
+          style={{ top: NAV_H, height: `calc(100vh - ${NAV_H}px)` }}
+        >
+          <div className="relative flex flex-col items-center gap-5">
+
+            {/* Progress */}
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-mono font-bold text-[#94a3b8] tracking-widest">
+                {String(activeIdx + 1).padStart(2, "0")} / {String(CHAPTERS.length).padStart(2, "0")}
+              </span>
+              <div className="flex gap-1.5">
+                {CHAPTERS.map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className="rounded-full"
+                    animate={{ width: activeIdx === i ? 20 : 6, background: activeIdx === i ? "#00a697" : "#cbd5e1" }}
+                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                    style={{ height: 6 }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Phone — one fixed size for every chapter so it never jumps */}
+            <div className="relative" style={{ width: phoneW }}>
+              <PhoneMockup
+                w={phoneW}
+                h={phoneH}
+                screenshot={active.screenshot}
+                hideIsland={!!active.screenshot}
+                screenTransition="fade"
+                placeholder={<ScreenPlaceholder chapter={active} />}
+              />
+
+              {/* Contextual cards follow the active screen. Shown only where
+                  there is room beside the device, so they can never leave
+                  the viewport on narrower desktops. */}
+              <div className="hidden xl:block">
+                <AnimatePresence mode="wait">
+                  {active.floatingCards.slice(0, 2).map((card, i) => {
+                    const isLeft = card.side === "left";
+                    return (
+                      <motion.div
+                        key={`${active.id}-${i}`}
+                        initial={{ opacity: 0, x: isLeft ? -10 : 10, scale: 0.96 }}
+                        animate={{ opacity: 1, x: 0, scale: 1 }}
+                        exit={{ opacity: 0, x: isLeft ? -6 : 6, scale: 0.97 }}
+                        transition={{ duration: 0.45, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] }}
+                        className="absolute pointer-events-none"
+                        style={{
+                          top: `${card.topPercent}%`,
+                          ...(isLeft ? { right: "calc(100% - 26px)" } : { left: "calc(100% - 26px)" }),
+                        }}
+                      >
+                        <FloatingCard icon={card.icon} label={card.label} value={card.value} badge={card.badge} />
+                      </motion.div>
+                    );
+                  })}
+                </AnimatePresence>
+              </div>
+            </div>
+
+            {/* Active chapter label */}
+            <motion.div
+              key={`label-${activeIdx}`}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35 }}
+              className="flex items-center gap-2"
+            >
+              <div className="w-6 h-6 rounded-lg bg-[#00a697]/10 flex items-center justify-center">
+                {(() => { const { Icon } = active; return <Icon size={13} className="text-[#00a697]" />; })()}
+              </div>
+              <span className="text-xs font-semibold text-[#94a3b8]">{active.label}</span>
+            </motion.div>
+          </div>
+        </div>
+
+        {/* Right — the story that drives the phone. The trailing space keeps
+            the sticky column travelling while the last chapter is being read,
+            so the phone never releases early. */}
+        <div style={{ paddingBottom: "12vh" }}>
+          {CHAPTERS.map((ch, i) => (
+            <div
+              key={ch.id}
+              ref={(el) => { chapterRefs.current[i] = el; }}
+              className="flex items-center"
+              style={{ minHeight: "92vh" }}
+            >
+              <ChapterContent chapter={ch} isActive={activeIdx === i} stepNum={i + 1} />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Mobile: single column, each story owns its phone ─────────────────────────
+
+const SCREEN_RATIO = 2400 / 1080;
+
+function MobileWalkthrough() {
+  const [phoneW, setPhoneW] = useState(234);
+
+  useEffect(() => {
+    const calc = () => {
+      // Width drives the size — clamp(205px, 60vw, 245px).
+      const byWidth = Math.min(Math.max(window.innerWidth * 0.6, 205), 245);
+      // Guard: the whole frame must still fit under the fixed nav with room
+      // to breathe, so a short viewport shrinks the phone rather than
+      // clipping its top or bottom.
+      const byHeight = (window.innerHeight - NAV_H - 56 - 6) / SCREEN_RATIO + 6;
+      setPhoneW(Math.round(Math.min(byWidth, byHeight)));
+    };
+    calc();
+    window.addEventListener("resize", calc);
+    window.addEventListener("orientationchange", calc);
+    return () => {
+      window.removeEventListener("resize", calc);
+      window.removeEventListener("orientationchange", calc);
+    };
+  }, []);
+
+  // Aspect ratio is always preserved — height is derived, never fixed.
+  const phoneH = Math.round((phoneW - 6) * SCREEN_RATIO) + 6;
+
+  return (
+    <div className="md:hidden" style={{ paddingInline: 20, overflowX: "clip" }}>
+      {CHAPTERS.map((ch, i) => (
+        <motion.article
+          key={ch.id}
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-8% 0px -8% 0px" }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          className="flex flex-col"
+          style={{ paddingTop: i === 0 ? 8 : 40, paddingBottom: 8 }}
+        >
+          <ChapterContent chapter={ch} isActive stepNum={i + 1} />
+
+          <div className="mt-7 flex justify-center" style={{ maxWidth: "100%" }}>
+            <PhoneMockup
+              w={phoneW}
+              h={phoneH}
+              screenshot={ch.screenshot}
+              hideIsland={!!ch.screenshot}
+              placeholder={<ScreenPlaceholder chapter={ch} />}
+            />
+          </div>
+
+          {ch.floatingCards.length > 0 && (
+            <div className="mt-5 flex flex-col items-center gap-2">
+              {ch.floatingCards.slice(0, 2).map((card, ci) => (
+                <FloatingCard
+                  key={ci}
+                  icon={card.icon}
+                  label={card.label}
+                  value={card.value}
+                  badge={card.badge}
+                  delay={ci * 0.08}
+                />
+              ))}
+            </div>
+          )}
+        </motion.article>
+      ))}
+    </div>
+  );
+}
+
+function WalkthroughSection() {
   return (
     <section id="product" className="relative" style={{ zIndex: 1 }}>
       <div className="text-center pt-16 pb-8 px-4">
@@ -828,114 +1027,8 @@ function WalkthroughSection() {
         <p className="text-[#64748b] mt-3 text-sm">Six features. One continuous demo.</p>
       </div>
 
-      {/* ── Desktop ──────────────────────────────────────────────── */}
-      <div className="hidden md:block max-w-6xl mx-auto px-6">
-        <div className="flex gap-12 lg:gap-20">
-
-          {/* Left: sticky phone */}
-          <div className="w-[55%] flex justify-center">
-            <div className="sticky flex flex-col items-center gap-5" style={{ top: "10vh", height: "fit-content", paddingTop: 8 }}>
-
-              {/* Progress */}
-              <div className="flex items-center gap-3">
-                <span className="text-xs font-mono font-bold text-[#94a3b8] tracking-widest">{stepLabel}</span>
-                <div className="flex gap-1.5">
-                  {CHAPTERS.map((_, i) => (
-                    <motion.div
-                      key={i}
-                      className="rounded-full"
-                      animate={{ width: activeIdx === i ? 20 : 6, background: activeIdx === i ? "#00a697" : "#cbd5e1" }}
-                      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                      style={{ height: 6 }}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* Phone — screen slides like a swipe on chapter change */}
-              <PhoneWithCards
-                chapter={activeChapter}
-                w={340}
-                h={activeChapter?.screenshot ? Math.round((340 - 6) * (2400 / 1080)) + 6 : 700}
-                showCards={true}
-                direction={direction}
-              />
-
-              {/* Chapter label */}
-              <motion.div
-                key={`label-${activeIdx}`}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35 }}
-                className="flex items-center gap-2"
-              >
-                <div className="w-6 h-6 rounded-lg bg-[#00a697]/10 flex items-center justify-center">
-                  {(() => { const { Icon } = CHAPTERS[activeIdx]; return <Icon size={13} className="text-[#00a697]" />; })()}
-                </div>
-                <span className="text-xs font-semibold text-[#94a3b8]">{CHAPTERS[activeIdx].label}</span>
-              </motion.div>
-            </div>
-          </div>
-
-          {/* Right: scrolling chapters */}
-          <div className="flex-1">
-            {CHAPTERS.map((ch, i) => (
-              <div
-                key={ch.id}
-                ref={(el) => { triggerRefs.current[i] = el; }}
-                className="flex items-center"
-                style={{ minHeight: "88vh", paddingTop: 40, paddingBottom: 40 }}
-              >
-                <ChapterContent chapter={ch} isActive={activeIdx === i} stepNum={i + 1} />
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* ── Mobile — single-column story, one block per feature ──── */}
-      <div className="md:hidden" style={{ paddingInline: 20, overflowX: "hidden" }}>
-        {CHAPTERS.map((ch, i) => (
-          <motion.article
-            key={ch.id}
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-8% 0px -8% 0px" }}
-            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="flex flex-col"
-            style={{ paddingTop: i === 0 ? 8 : 40, paddingBottom: 8 }}
-          >
-            {/* Feature number · category · headline · description · benefits */}
-            <ChapterContent chapter={ch} isActive stepNum={i + 1} />
-
-            {/* App frame — sized from the viewport, never wider than it */}
-            <div className="mt-7 flex justify-center">
-              <PhoneMockup
-                w={phoneW}
-                h={phoneH(phoneW, ch.screenshot)}
-                screenshot={ch.screenshot}
-                hideIsland={!!ch.screenshot}
-              />
-            </div>
-
-            {/* At most two contextual cards, kept fully inside the viewport */}
-            {ch.floatingCards.length > 0 && (
-              <div className="mt-5 flex flex-col items-center gap-2">
-                {ch.floatingCards.slice(0, 2).map((card, ci) => (
-                  <FloatingCard
-                    key={ci}
-                    icon={card.icon}
-                    label={card.label}
-                    value={card.value}
-                    badge={card.badge}
-                    delay={ci * 0.08}
-                  />
-                ))}
-              </div>
-            )}
-          </motion.article>
-        ))}
-      </div>
+      <DesktopWalkthrough />
+      <MobileWalkthrough />
     </section>
   );
 }
@@ -1142,7 +1235,7 @@ function Footer() {
 
 export default function App() {
   return (
-    <div className="min-h-screen overflow-x-hidden" style={{ fontFamily: "'Inter', sans-serif", background: "#fffdf5" }}>
+    <div className="min-h-screen overflow-x-clip" style={{ fontFamily: "'Inter', sans-serif", background: "#fffdf5" }}>
       <Background />
       <Navbar />
       <main style={{ position: "relative", zIndex: 1 }}>
