@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Users, PiggyBank, Calendar, CreditCard, BookOpen, BarChart3,
-  Check, TrendingUp, ChevronDown, Menu, X, Globe,
+  Check, ChevronDown, Menu, X, Globe,
   ArrowRight, Shield, Smartphone, Star, Sparkles,
 } from "lucide-react";
 import imgPlayStore from "@/imports/MacBookPro141/88b9df5eb5bdd63e4273c402c2c65973540fd514.png";
@@ -13,10 +13,25 @@ import imgMembers from "@/imports/members.png";
 import imgPayments from "@/imports/payments.png";
 import imgLoans from "@/imports/loans.png";
 import imgLedger from "@/imports/ledger.png";
+import imgMeetings from "@/imports/meetings.png";
+import imgReports from "@/imports/reports.png";
+import PrivacyPolicyPage from "./pages/PrivacyPolicy";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type ChapterId = "members" | "savings" | "meetings" | "loans" | "ledger" | "reports";
+
+/** A figure lifted straight from the chapter's screenshot — never invented. */
+interface Annotation {
+  /** Which side of the device the note sits on. */
+  side: "left" | "right";
+  /** Vertical position as a percentage of the device height. */
+  topPercent: number;
+  /** The figure, exactly as the app shows it. */
+  value: string;
+  /** What that figure is, in the app's own words. */
+  label: string;
+}
 
 interface Chapter {
   id: ChapterId;
@@ -26,17 +41,8 @@ interface Chapter {
   body: string;
   Icon: typeof Users;
   benefits: string[];
-  floatingCards: FloatingCardData[];
+  annotations: Annotation[];
   screenshot?: string;
-}
-
-interface FloatingCardData {
-  side: "left" | "right";
-  topPercent: number;
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  badge?: string;
 }
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
@@ -47,26 +53,13 @@ const CHAPTERS: Chapter[] = [
     label: "Member Management",
     headline: "Every member,",
     accent: "in one place.",
-    body: "All 24 profiles, savings history, and contact details in one shared record everyone trusts.",
+    body: "Profiles, roles, and savings status stay together in one shared record.",
     Icon: Users,
-    benefits: ["24 profiles, always current", "Roles and savings unified", "New member added in seconds"],
+    benefits: ["Manage member profiles", "See roles and savings status", "Add members as the group grows"],
     screenshot: imgMembers,
-    floatingCards: [
-      {
-        side: "left",
-        topPercent: 18,
-        icon: <Users size={16} color="white" />,
-        label: "Group Members",
-        value: "24 Active",
-      },
-      {
-        side: "right",
-        topPercent: 48,
-        icon: <Check size={16} color="white" strokeWidth={3} />,
-        label: "Member Added",
-        value: "Gauri Kapoor",
-        badge: "Just joined",
-      },
+    annotations: [
+      { side: "left", topPercent: 16, value: "12", label: "active members" },
+      { side: "right", topPercent: 46, value: "2 · 10", label: "leadership · members" },
     ],
   },
   {
@@ -74,26 +67,13 @@ const CHAPTERS: Chapter[] = [
     label: "Savings Collection",
     headline: "Every rupee,",
     accent: "recorded instantly.",
-    body: "No more tallying notebook columns. Tap once, savings recorded. The group total updates in real time.",
+    body: "Tap a member to record their payment. The group total updates as you go.",
     Icon: PiggyBank,
-    benefits: ["₹12,400 collected this month", "22 of 24 members paid", "Receipt generated instantly"],
+    benefits: ["Record monthly savings", "Track who has paid", "Keep collection history"],
     screenshot: imgPayments,
-    floatingCards: [
-      {
-        side: "left",
-        topPercent: 20,
-        icon: <PiggyBank size={16} color="white" />,
-        label: "Today's Collection",
-        value: "₹52,300",
-        badge: "12/12 paid",
-      },
-      {
-        side: "right",
-        topPercent: 52,
-        icon: <Check size={16} color="white" strokeWidth={3} />,
-        label: "Savings Recorded",
-        value: "All paid",
-      },
+    annotations: [
+      { side: "left", topPercent: 15, value: "₹52,300", label: "total paid today" },
+      { side: "right", topPercent: 45, value: "12 of 12", label: "members paid" },
     ],
   },
   {
@@ -101,25 +81,12 @@ const CHAPTERS: Chapter[] = [
     label: "Group Meetings",
     headline: "Meetings,",
     accent: "without paperwork.",
-    body: "Attendance, agenda, minutes — recorded in a few taps. A permanent record any member can access anytime.",
+    body: "Start the monthly meeting and work through attendance, savings, and loans in one guided flow.",
     Icon: Calendar,
-    benefits: ["22 of 24 present this meeting", "Minutes saved instantly", "All members notified by SMS"],
-    floatingCards: [
-      {
-        side: "left",
-        topPercent: 22,
-        icon: <Calendar size={16} color="white" />,
-        label: "Meeting Recorded",
-        value: "15 May 2025",
-      },
-      {
-        side: "right",
-        topPercent: 50,
-        icon: <Check size={16} color="white" strokeWidth={3} />,
-        label: "Attendance",
-        value: "22 / 24",
-        badge: "Members present",
-      },
+    benefits: ["Start the monthly meeting", "Work through each step in order", "Keep a record of every meeting"],
+    screenshot: imgMeetings,
+    annotations: [
+      { side: "left", topPercent: 10, value: "September 2026", label: "monthly meeting" },
     ],
   },
   {
@@ -127,26 +94,13 @@ const CHAPTERS: Chapter[] = [
     label: "Loan Management",
     headline: "Every loan,",
     accent: "always visible.",
-    body: "Loan requests, approvals, EMI schedules, and outstanding balances — transparent to the whole group.",
+    body: "Create and manage loans from the group's own savings, visible to everyone.",
     Icon: CreditCard,
-    benefits: ["₹15,000 approved in minutes", "₹45,000 total outstanding", "3 active loans, zero disputes"],
+    benefits: ["Track active loans", "Record repayments", "See outstanding balances"],
     screenshot: imgLoans,
-    floatingCards: [
-      {
-        side: "left",
-        topPercent: 18,
-        icon: <CreditCard size={16} color="white" />,
-        label: "Active Loan",
-        value: "₹1,00,000",
-        badge: "Akshay Bhange",
-      },
-      {
-        side: "right",
-        topPercent: 50,
-        icon: <TrendingUp size={16} color="white" />,
-        label: "Outstanding",
-        value: "₹1,00,000",
-      },
+    annotations: [
+      { side: "left", topPercent: 16, value: "1", label: "active loan" },
+      { side: "right", topPercent: 44, value: "₹1,00,000", label: "outstanding" },
     ],
   },
   {
@@ -154,26 +108,13 @@ const CHAPTERS: Chapter[] = [
     label: "Group Ledger",
     headline: "Everything,",
     accent: "always balanced.",
-    body: "Personal ledger and group ledger side by side. Automatic calculations. Bank-ready at any time.",
+    body: "Personal and group ledgers side by side, with the balances worked out for you.",
     Icon: BookOpen,
-    benefits: ["₹1,24,600 current balance", "Auto-calculated, zero errors", "Bank-format export, one tap"],
+    benefits: ["Track group transactions", "See closing and previous balances", "Keep the financial record organised"],
     screenshot: imgLedger,
-    floatingCards: [
-      {
-        side: "left",
-        topPercent: 20,
-        icon: <BookOpen size={16} color="white" />,
-        label: "Closing Balance",
-        value: "₹2,65,726",
-        badge: "Auto-balanced",
-      },
-      {
-        side: "right",
-        topPercent: 52,
-        icon: <Check size={16} color="white" strokeWidth={3} />,
-        label: "Total Collected",
-        value: "₹52,300",
-      },
+    annotations: [
+      { side: "left", topPercent: 15, value: "₹2,65,726", label: "closing balance" },
+      { side: "right", topPercent: 46, value: "₹52,300", label: "total collected" },
     ],
   },
   {
@@ -181,26 +122,11 @@ const CHAPTERS: Chapter[] = [
     label: "Reports & Analytics",
     headline: "Know your group,",
     accent: "at a glance.",
-    body: "Charts, insights, and monthly summaries generated automatically. Share with your bank in one tap.",
+    body: "Export the group's data, or open a savings, members, or loans report — then share it straight from the phone.",
     Icon: BarChart3,
-    benefits: ["5-month savings chart", "Group health: Excellent", "PDF report ready to share"],
-    floatingCards: [
-      {
-        side: "left",
-        topPercent: 20,
-        icon: <BarChart3 size={16} color="white" />,
-        label: "Reports Ready",
-        value: "May 2025",
-        badge: "Bank-format PDF",
-      },
-      {
-        side: "right",
-        topPercent: 52,
-        icon: <Check size={16} color="white" strokeWidth={3} />,
-        label: "Group Health",
-        value: "Excellent",
-      },
-    ],
+    benefits: ["Export members, loans, savings, and meetings", "Open savings, members, or loan reports", "Share or save the file from your phone"],
+    screenshot: imgReports,
+    annotations: [],
   },
 ];
 
@@ -255,9 +181,67 @@ function Background() {
   );
 }
 
+// ─── Routing ──────────────────────────────────────────────────────────────────
+
+// Two pages, so the History API is enough. react-router is in package.json but
+// unused, and pulling a router in for one route would be more moving parts than
+// the site needs. BASE keeps this working when the site is served from a
+// sub-path (a preview build) rather than the domain root.
+type Route = "/" | "/privacy-policy";
+
+const PRIVACY_PATH = "/privacy-policy";
+
+const BASE = window.location.pathname.replace(/\/+$/, "").replace(/\/privacy-policy$/, "");
+
+function routeOf(pathname: string): Route {
+  return pathname.replace(/\/+$/, "").endsWith(PRIVACY_PATH) ? PRIVACY_PATH : "/";
+}
+
+function useRoute() {
+  const [route, setRoute] = useState<Route>(() => routeOf(window.location.pathname));
+
+  useEffect(() => {
+    // Back/forward must land on the right page.
+    const onPop = () => setRoute(routeOf(window.location.pathname));
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
+  const navigate = (to: Route) => {
+    if (to === routeOf(window.location.pathname)) return;
+    window.history.pushState({}, "", to === "/" ? BASE + "/" : BASE + PRIVACY_PATH);
+    setRoute(to);
+    window.scrollTo(0, 0);
+  };
+
+  return { route, navigate };
+}
+
+type Nav = ReturnType<typeof useRoute>;
+
+/** Jump to an anchor, returning home first when we are on another page. */
+function useAnchor({ route, navigate }: Nav) {
+  return (hash: string) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    const target = hash.replace("#", "");
+    if (route !== "/") {
+      navigate("/");
+      // The homepage has to mount before its sections can be scrolled to.
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        const el = target && document.getElementById(target);
+        if (el) el.scrollIntoView({ behavior: "auto", block: "start" });
+      }));
+      return;
+    }
+    const el = target && document.getElementById(target);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    else window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+}
+
 // ─── Navbar ───────────────────────────────────────────────────────────────────
 
-function Navbar() {
+function Navbar({ nav }: { nav: Nav }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -267,9 +251,11 @@ function Navbar() {
     return () => window.removeEventListener("scroll", fn);
   }, []);
 
+  const anchor = useAnchor(nav);
+
   const links = [
     { label: "Product", href: "#product" },
-    { label: "Impact", href: "#impact" },
+    ...(SHOW_IMPACT ? [{ label: "Impact", href: "#impact" }] : []),
     { label: "Why SHG", href: "#roles" },
     { label: "FAQs", href: "#faq" },
   ];
@@ -281,7 +267,7 @@ function Navbar() {
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16">
-          <a href="#" className="flex items-center gap-3 shrink-0">
+          <a href="#" onClick={anchor("#")} className="flex items-center gap-3 shrink-0">
             <div className="relative w-11 h-11">
               <div className="absolute inset-0 bg-[#00a697] rounded-2xl" />
               <div className="absolute inset-[13%] bg-[#ffedd5] rounded-xl" />
@@ -297,7 +283,7 @@ function Navbar() {
 
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-[#1e293b]">
             {links.map((l) => (
-              <a key={l.href} href={l.href} className="hover:text-[#00a697] transition-colors">{l.label}</a>
+              <a key={l.href} href={l.href} onClick={anchor(l.href)} className="hover:text-[#00a697] transition-colors">{l.label}</a>
             ))}
           </div>
 
@@ -306,7 +292,7 @@ function Navbar() {
               <Globe size={15} className="text-[#00a697]" />
               English
             </button>
-            <a href="#download" className="flex items-center gap-2 bg-white border border-[#94a3b8] rounded-full px-5 py-2 text-sm font-medium text-[#1e293b] hover:border-[#1e293b] hover:shadow-sm transition-all">
+            <a href="#download" onClick={anchor("#download")} className="flex items-center gap-2 bg-white border border-[#94a3b8] rounded-full px-5 py-2 text-sm font-medium text-[#1e293b] hover:border-[#1e293b] hover:shadow-sm transition-all">
               <img src={imgPlayStore} alt="" className="w-4 object-contain" style={{ height: 18 }} />
               Download
             </a>
@@ -321,9 +307,9 @@ function Navbar() {
       {menuOpen && (
         <div className="md:hidden border-t border-[#e7e5e4] bg-[#fffdf5] px-6 py-5 flex flex-col gap-5">
           {links.map((l) => (
-            <a key={l.href} href={l.href} className="text-base font-medium text-[#1e293b]" onClick={() => setMenuOpen(false)}>{l.label}</a>
+            <a key={l.href} href={l.href} className="text-base font-medium text-[#1e293b]" onClick={(e) => { setMenuOpen(false); anchor(l.href)(e); }}>{l.label}</a>
           ))}
-          <a href="#download" className="flex items-center gap-2 bg-white border border-[#94a3b8] rounded-full px-5 py-2.5 text-sm font-medium text-[#1e293b] w-fit" onClick={() => setMenuOpen(false)}>
+          <a href="#download" className="flex items-center gap-2 bg-white border border-[#94a3b8] rounded-full px-5 py-2.5 text-sm font-medium text-[#1e293b] w-fit" onClick={(e) => { setMenuOpen(false); anchor("#download")(e); }}>
             <img src={imgPlayStore} alt="" className="w-4 object-contain" style={{ height: 18 }} />
             Download
           </a>
@@ -426,23 +412,26 @@ function PhoneMockup({ w = 260, h = 535, screenshot, hideIsland = false, directi
           />
         )}
 
-        {/* Screen — slides in/out like a phone swipe */}
+        {/* Screen — crossfades in the walkthrough, slides elsewhere */}
         <div className="absolute inset-0 overflow-hidden" style={{ background: "#FFFFFF" }}>
           <AnimatePresence custom={direction} initial={false} mode="sync">
             <motion.div
               key={screenshot ?? "__blank__"}
               custom={direction}
-              variants={screenSlideVariants}
+              variants={isFade ? screenFadeVariants : screenSlideVariants}
               initial="enter"
               animate="center"
               exit="exit"
-              transition={{ duration: 0.38, ease: [0.32, 0.72, 0, 1] }}
+              transition={{
+                duration: isFade ? 0.5 : 0.38,
+                ease: isFade ? [0.22, 1, 0.36, 1] : [0.32, 0.72, 0, 1],
+              }}
               className="absolute inset-0"
               style={{ willChange: "transform" }}
             >
               {screenshot
                 ? <img src={screenshot} alt="" className="w-full h-full" style={{ display: "block", objectFit: "fill" }} />
-                : <div className="w-full h-full" style={{ background: "#FFFFFF" }} />
+                : <div className="w-full h-full flex items-center justify-center" style={{ background: "#FFFFFF" }}>{placeholder}</div>
               }
             </motion.div>
           </AnimatePresence>
@@ -465,99 +454,65 @@ function PhoneMockup({ w = 260, h = 535, screenshot, hideIsland = false, directi
 
 // ─── Floating Info Card ────────────────────────────────────────────────────────
 
-function FloatingCard({
-  icon,
-  label,
+/**
+ * A quiet annotation pinned beside the device: one figure taken straight from
+ * the screenshot, the app's own word for it, and a hairline tying it to the
+ * screen. Deliberately not a card — the product stays the loudest thing here.
+ */
+function PhoneAnnotation({
+  side,
+  topPercent,
   value,
-  badge,
+  label,
   delay = 0,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  badge?: string;
-  delay?: number;
-}) {
+}: Annotation & { delay?: number }) {
+  const isLeft = side === "left";
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -6, scale: 0.95 }}
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -4 }}
       transition={{ duration: 0.4, delay, ease: [0.22, 1, 0.36, 1] }}
-      className="bg-white rounded-2xl px-3.5 py-3 border border-[#f1f5f9]"
+      className="absolute flex items-center pointer-events-none"
       style={{
-        boxShadow: "0 8px 32px rgba(12,12,13,0.10), 0 2px 8px rgba(12,12,13,0.06)",
-        minWidth: 158,
-        maxWidth: 190,
+        top: `${topPercent}%`,
+        ...(isLeft ? { right: "100%" } : { left: "100%" }),
+        flexDirection: isLeft ? "row" : "row-reverse",
       }}
     >
-      <div className="flex items-center gap-2.5">
-        <div className="w-8 h-8 rounded-full bg-[#00a697] flex items-center justify-center shrink-0">
-          {icon}
+      <div
+        className={`rounded-[10px] border border-[#e8edf2] bg-white/85 px-2.5 py-1.5 ${isLeft ? "text-right" : "text-left"}`}
+        style={{ backdropFilter: "blur(4px)", boxShadow: "0 1px 2px rgba(15,23,42,0.04)" }}
+      >
+        <div className="text-[14px] font-semibold text-[#1e293b] leading-none whitespace-nowrap tabular-nums">
+          {value}
         </div>
-        <div className="min-w-0">
-          <div className="text-[10px] text-[#94a3b8] leading-none mb-1 truncate">{label}</div>
-          <div className="text-[14px] font-bold text-[#1e293b] leading-tight truncate">{value}</div>
-          {badge && (
-            <div className="mt-1.5 inline-flex items-center gap-1 bg-[#00a697] text-white text-[10px] font-semibold rounded-full px-2 py-0.5">
-              <TrendingUp size={8} />
-              {badge}
-            </div>
-          )}
+        <div className="mt-1 text-[9px] font-medium uppercase tracking-[0.08em] text-[#94a3b8] leading-none whitespace-nowrap">
+          {label}
         </div>
       </div>
+      {/* hairline connector into the screen */}
+      <div style={{ width: 20, height: 1, background: "#d7dee6" }} />
     </motion.div>
   );
 }
 
-// ─── Phone with Chapter Cards ─────────────────────────────────────────────────
+// ─── Google Play Mark ─────────────────────────────────────────────────────────
 
-function PhoneWithCards({
-  chapter,
-  w,
-  h,
-  showCards = true,
-  direction = 1,
-}: {
-  chapter: Chapter | null;
-  w: number;
-  h: number;
-  showCards?: boolean;
-  direction?: number;
-}) {
-  const screenH = chapter?.screenshot ? Math.round((w - 6) * (2400 / 1080)) + 6 : h;
-
+/**
+ * The Google Play triangle, drawn as vector paths in its own four colours.
+ * The PNG badge it replaces had to be washed to flat white with a brightness
+ * filter to survive the dark button, which destroyed the mark. This scales
+ * cleanly and keeps the brand colours on any background.
+ */
+function GooglePlayIcon({ size = 20 }: { size?: number }) {
   return (
-    <div className="relative flex items-center justify-center" style={{ width: w }}>
-      <PhoneMockup w={w} h={screenH} screenshot={chapter?.screenshot} hideIsland={!!chapter?.screenshot} direction={direction} />
-
-      {showCards && chapter && chapter.floatingCards.map((card, i) => {
-        const isLeft = card.side === "left";
-        return (
-          <motion.div
-            key={`${chapter.id}-${i}`}
-            initial={{ opacity: 0, x: isLeft ? -10 : 10, scale: 0.95 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: isLeft ? -6 : 6, scale: 0.96 }}
-            transition={{ duration: 0.42, delay: i * 0.12, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute pointer-events-none"
-            style={{
-              top: `${card.topPercent}%`,
-              ...(isLeft
-                ? { right: "calc(100% + 14px)" }
-                : { left: "calc(100% + 14px)" }),
-            }}
-          >
-            <FloatingCard
-              icon={card.icon}
-              label={card.label}
-              value={card.value}
-              badge={card.badge}
-            />
-          </motion.div>
-        );
-      })}
-    </div>
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path fill="#00A0FF" d="M3.063 3.27a1.5 1.5 0 0 0-.5 1.12v15.22a1.5 1.5 0 0 0 .5 1.12l.08.08L11.7 12.1v-.2L3.14 3.19l-.08.08z" />
+      <path fill="#FFCE00" d="M14.55 15.02 11.7 12.1v-.2l2.85-2.92.07.04 3.38 1.92c.97.55.97 1.44 0 1.99l-3.38 1.92-.07.04z" />
+      <path fill="#FF3A44" d="M14.62 14.98 11.7 12l-8.64 8.73c.32.34.85.38 1.44.04l10.12-5.79z" />
+      <path fill="#00E676" d="M14.62 9.02 4.5 3.23c-.59-.34-1.12-.3-1.44.04L11.7 12l2.92-2.98z" />
+    </svg>
   );
 }
 
@@ -580,7 +535,7 @@ function HeroSection() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, delay: 0.2 }}
-        className="text-[40px] sm:text-[56px] font-medium text-[#1e293b] leading-tight tracking-tight max-w-2xl mx-auto mb-6"
+        className="text-[40px] sm:text-[56px] font-medium text-[#1e293b] leading-tight tracking-tight max-w-2xl sm:max-w-4xl mx-auto mb-6"
       >
         Run your SHG with{" "}
         <span className="font-bold text-[#00a697]">Confidence</span>,<br />
@@ -628,37 +583,11 @@ function HeroSection() {
         {/* Hero phone — sized to match 1080×2400 screenshot ratio (9:20) */}
         <div className="relative">
           <PhoneMockup w={260} h={570} screenshot={imgHomeScreen} hideIsland />
-
-          {/* Left card */}
-          <motion.div
-            initial={{ opacity: 0, x: -12, scale: 0.95 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.9, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute"
-            style={{ right: "calc(100% + 14px)", top: "20%" }}
-          >
-            <FloatingCard
-              icon={<PiggyBank size={16} color="white" />}
-              label="Group Savings"
-              value="₹1,24,600"
-              badge="+₹8,200 this month"
-            />
-          </motion.div>
-
-          {/* Right card */}
-          <motion.div
-            initial={{ opacity: 0, x: 12, scale: 0.95 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            transition={{ duration: 0.5, delay: 1.05, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute hidden sm:block"
-            style={{ left: "calc(100% + 14px)", top: "45%" }}
-          >
-            <FloatingCard
-              icon={<Check size={16} color="white" strokeWidth={3} />}
-              label="Savings Recorded"
-              value="Sunita: +₹2,000"
-            />
-          </motion.div>
+            {/* Notes taken from the dashboard actually on screen */}
+            <div className="hidden sm:block">
+              <PhoneAnnotation side="left" topPercent={20} value="₹5,28,000" label="total group savings" delay={0.9} />
+              <PhoneAnnotation side="right" topPercent={45} value="6" label="loans active" delay={1.05} />
+            </div>
         </div>
       </motion.div>
 
@@ -674,7 +603,7 @@ function HeroSection() {
           href="#"
           className="flex items-center gap-2.5 bg-[#1e293b] text-white rounded-full px-7 py-3.5 text-sm font-semibold hover:bg-[#0f172a] transition-colors shadow-lg shadow-[#1e293b]/20"
         >
-          <img src={imgPlayStore} alt="" className="w-5 object-contain" style={{ height: 22, filter: "brightness(10)" }} />
+          <GooglePlayIcon size={20} />
           Download on Google Play
         </a>
         <a
@@ -740,16 +669,19 @@ function ProblemSection() {
 
 // ─── Walkthrough ──────────────────────────────────────────────────────────────
 
-function ChapterContent({ chapter, isActive, stepNum }: { chapter: Chapter; isActive: boolean; stepNum: number }) {
+function ChapterContent({ chapter, isActive, stepNum, innerRef }: {
+  chapter: Chapter; isActive: boolean; stepNum: number;
+  /** Desktop walkthrough measures this block to decide the active chapter. */
+  innerRef?: (el: HTMLDivElement | null) => void;
+}) {
   return (
-    <motion.div
-      animate={{ opacity: isActive ? 1 : 0.28 }}
-      transition={{ duration: 0.4 }}
-      className="w-full md:max-w-sm"
-    >
+    // Plain div, never animated. The explanatory copy is ordinary page content:
+    // it reads at full contrast whether or not its chapter is the active one.
+    // Only the phone beside it crossfades, because only the screen changes.
+    <div ref={innerRef} className="w-full md:max-w-sm">
       {/* Step line */}
       <div className="flex items-center gap-3 mb-5">
-        <span className="text-[11px] font-mono font-bold tracking-widest" style={{ color: isActive ? "#00a697" : "#cbd5e1" }}>
+        <span className="text-[11px] font-mono font-bold tracking-widest" style={{ color: isActive ? "#00a697" : "#94a3b8", transition: "color 0.4s" }}>
           {String(stepNum).padStart(2, "0")}
         </span>
         <div className="h-px flex-1" style={{ background: isActive ? "#00a697" : "#e2e8f0", transition: "background 0.4s" }} />
@@ -769,21 +701,16 @@ function ChapterContent({ chapter, isActive, stepNum }: { chapter: Chapter; isAc
       <p className="text-[15px] text-[#64748b] leading-relaxed mb-6 md:mb-7">{chapter.body}</p>
 
       <div className="space-y-3">
-        {chapter.benefits.map((b, i) => (
-          <motion.div
-            key={b}
-            animate={{ opacity: isActive ? 1 : 0.35, x: isActive ? 0 : -6 }}
-            transition={{ duration: 0.3, delay: isActive ? i * 0.07 : 0 }}
-            className="flex items-center gap-3"
-          >
+        {chapter.benefits.map((b) => (
+          <div key={b} className="flex items-center gap-3">
             <div className="w-5 h-5 rounded-full bg-[#00a697] flex items-center justify-center shrink-0">
               <Check size={10} color="white" strokeWidth={3} />
             </div>
             <span className="text-sm font-medium text-[#475569]">{b}</span>
-          </motion.div>
+          </div>
         ))}
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -800,11 +727,25 @@ function ScreenPlaceholder({ chapter }: { chapter: Chapter }) {
 
 const NAV_H = 64; // fixed header is h-16
 
-// ─── Desktop: sticky phone, scroll drives the screen ──────────────────────────
+/** Community Impact is hidden. Flip to true to bring the section and its
+  * nav/footer links back — the component and its data are left intact. */
+const SHOW_IMPACT = false;
+
+// ─── Desktop: sticky phone, the content drives the screen ─────────────────────
+
+/** Reading line, as a fraction of the space below the nav. A chapter becomes
+ *  active when its content block descends past this line. */
+const ACTIVATE_AT = 0.42;
+
+/** Deadband, in px. The content must clear the line by this much before the
+ *  screen follows, so a nudge near a boundary never swaps the screenshot.
+ *  Chapters sit ~92vh apart, so this is a small fraction of the travel. */
+const ACTIVATE_HYSTERESIS = 90;
 
 function DesktopWalkthrough() {
   const [activeIdx, setActiveIdx] = useState(0);
-  const chapterRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const contentRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const activeRef = useRef(0);
   const [vh, setVh] = useState(900);
 
   useEffect(() => {
@@ -820,21 +761,56 @@ function DesktopWalkthrough() {
   const phoneW = Math.round((phoneH - 6) / SCREEN_RATIO + 6);
 
   useEffect(() => {
-    // A thin band across the middle of the viewport: exactly one chapter sits
-    // in it at a time, so the active screen never flickers at boundaries.
-    const obs = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) {
-            const idx = chapterRefs.current.indexOf(e.target as HTMLDivElement);
-            if (idx !== -1) setActiveIdx(idx);
-          }
-        });
-      },
-      { threshold: 0, rootMargin: "-45% 0px -45% 0px" }
-    );
-    chapterRefs.current.forEach((el) => el && obs.observe(el));
-    return () => obs.disconnect();
+    // The screen follows the content, not the scroll position. On each frame,
+    // the active chapter is the last one whose content block has descended
+    // past the reading line — a single, ordered answer, so two chapters near a
+    // boundary can never race each other the way overlapping observer entries
+    // did. A change must additionally clear the deadband, which is what makes
+    // a small scroll back and forth leave the screenshot alone.
+    let frame = 0;
+
+    const update = () => {
+      frame = 0;
+      const els = contentRefs.current;
+      if (!els.length || !els[0]) return;
+
+      const line = NAV_H + (window.innerHeight - NAV_H) * ACTIVATE_AT;
+
+      let next = 0;
+      for (let i = 0; i < els.length; i++) {
+        const el = els[i];
+        if (el && el.getBoundingClientRect().top <= line) next = i;
+      }
+
+      const cur = activeRef.current;
+      if (next === cur) return;
+
+      // Going forward, the arriving chapter must have travelled past the line.
+      // Going back, the current one must have retreated well below it. Either
+      // way the move costs a deliberate scroll, not a nudge.
+      const forward = next > cur;
+      const probe = els[forward ? next : cur];
+      if (!probe) return;
+      const top = probe.getBoundingClientRect().top;
+      const committed = forward
+        ? top <= line - ACTIVATE_HYSTERESIS
+        : top >= line + ACTIVATE_HYSTERESIS;
+
+      if (committed) {
+        activeRef.current = next;
+        setActiveIdx(next);
+      }
+    };
+
+    const onScroll = () => { if (!frame) frame = requestAnimationFrame(update); };
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (frame) cancelAnimationFrame(frame);
+    };
   }, []);
 
   const active = CHAPTERS[activeIdx];
@@ -879,30 +855,13 @@ function DesktopWalkthrough() {
                 placeholder={<ScreenPlaceholder chapter={active} />}
               />
 
-              {/* Contextual cards follow the active screen. Shown only where
-                  there is room beside the device, so they can never leave
-                  the viewport on narrower desktops. */}
+              {/* Notes drawn from the screen itself. Shown only where there
+                  is room beside the device, so they never leave the viewport. */}
               <div className="hidden xl:block">
                 <AnimatePresence mode="wait">
-                  {active.floatingCards.slice(0, 2).map((card, i) => {
-                    const isLeft = card.side === "left";
-                    return (
-                      <motion.div
-                        key={`${active.id}-${i}`}
-                        initial={{ opacity: 0, x: isLeft ? -10 : 10, scale: 0.96 }}
-                        animate={{ opacity: 1, x: 0, scale: 1 }}
-                        exit={{ opacity: 0, x: isLeft ? -6 : 6, scale: 0.97 }}
-                        transition={{ duration: 0.45, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] }}
-                        className="absolute pointer-events-none"
-                        style={{
-                          top: `${card.topPercent}%`,
-                          ...(isLeft ? { right: "calc(100% - 26px)" } : { left: "calc(100% - 26px)" }),
-                        }}
-                      >
-                        <FloatingCard icon={card.icon} label={card.label} value={card.value} badge={card.badge} />
-                      </motion.div>
-                    );
-                  })}
+                  {active.annotations.slice(0, 3).map((a, i) => (
+                    <PhoneAnnotation key={`${active.id}-${i}`} {...a} delay={0.08 + i * 0.08} />
+                  ))}
                 </AnimatePresence>
               </div>
             </div>
@@ -928,13 +887,13 @@ function DesktopWalkthrough() {
             so the phone never releases early. */}
         <div style={{ paddingBottom: "12vh" }}>
           {CHAPTERS.map((ch, i) => (
-            <div
-              key={ch.id}
-              ref={(el) => { chapterRefs.current[i] = el; }}
-              className="flex items-center"
-              style={{ minHeight: "92vh" }}
-            >
-              <ChapterContent chapter={ch} isActive={activeIdx === i} stepNum={i + 1} />
+            <div key={ch.id} className="flex items-center" style={{ minHeight: "92vh" }}>
+              <ChapterContent
+                chapter={ch}
+                isActive={activeIdx === i}
+                stepNum={i + 1}
+                innerRef={(el) => { contentRefs.current[i] = el; }}
+              />
             </div>
           ))}
         </div>
@@ -948,15 +907,13 @@ function DesktopWalkthrough() {
 const SCREEN_RATIO = 2400 / 1080;
 
 function MobileWalkthrough() {
-  const [phoneW, setPhoneW] = useState(234);
+  const [phoneW, setPhoneW] = useState(242);
 
   useEffect(() => {
     const calc = () => {
-      // Width drives the size — clamp(205px, 60vw, 245px).
-      const byWidth = Math.min(Math.max(window.innerWidth * 0.6, 205), 245);
-      // Guard: the whole frame must still fit under the fixed nav with room
-      // to breathe, so a short viewport shrinks the phone rather than
-      // clipping its top or bottom.
+      // clamp(210px, 62vw, 250px)
+      const byWidth = Math.min(Math.max(window.innerWidth * 0.62, 210), 250);
+      // Guard so a short viewport shrinks the device rather than clipping it.
       const byHeight = (window.innerHeight - NAV_H - 56 - 6) / SCREEN_RATIO + 6;
       setPhoneW(Math.round(Math.min(byWidth, byHeight)));
     };
@@ -969,24 +926,42 @@ function MobileWalkthrough() {
     };
   }, []);
 
-  // Aspect ratio is always preserved — height is derived, never fixed.
+  // Aspect ratio always derived, never fixed.
   const phoneH = Math.round((phoneW - 6) * SCREEN_RATIO) + 6;
 
   return (
     <div className="md:hidden" style={{ paddingInline: 20, overflowX: "clip" }}>
       {CHAPTERS.map((ch, i) => (
+        // The whole block reveals as one unit, so the phone and the title it
+        // belongs to always arrive together.
         <motion.article
           key={ch.id}
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-8% 0px -8% 0px" }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          className="flex flex-col"
-          style={{ paddingTop: i === 0 ? 8 : 40, paddingBottom: 8 }}
+          viewport={{ once: true, margin: "-10% 0px -10% 0px" }}
+          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+          className="flex flex-col items-center text-center"
+          style={{ paddingTop: i === 0 ? 4 : 0, marginBottom: i === CHAPTERS.length - 1 ? 8 : 84 }}
         >
-          <ChapterContent chapter={ch} isActive stepNum={i + 1} />
+          {/* Chapter label */}
+          <span className="text-[11px] font-mono font-bold tracking-widest text-[#94a3b8]">
+            {String(i + 1).padStart(2, "0")} / {String(CHAPTERS.length).padStart(2, "0")}
+          </span>
+          <span className="mt-1.5 text-[11px] font-bold text-[#00a697] uppercase tracking-widest">
+            {ch.label}
+          </span>
 
-          <div className="mt-7 flex justify-center" style={{ maxWidth: "100%" }}>
+          {/* Feature title — the hero line */}
+          <h3
+            className="mt-3.5 font-medium text-[#1e293b] tracking-tight"
+            style={{ fontSize: "clamp(28px, 8vw, 36px)", lineHeight: 1.02 }}
+          >
+            {ch.headline}<br />
+            <span className="font-extrabold text-[#00a697]">{ch.accent}</span>
+          </h3>
+
+          {/* The device is the visual hero of the block */}
+          <div className="mt-8" style={{ maxWidth: "100%" }}>
             <PhoneMockup
               w={phoneW}
               h={phoneH}
@@ -996,20 +971,10 @@ function MobileWalkthrough() {
             />
           </div>
 
-          {ch.floatingCards.length > 0 && (
-            <div className="mt-5 flex flex-col items-center gap-2">
-              {ch.floatingCards.slice(0, 2).map((card, ci) => (
-                <FloatingCard
-                  key={ci}
-                  icon={card.icon}
-                  label={card.label}
-                  value={card.value}
-                  badge={card.badge}
-                  delay={ci * 0.08}
-                />
-              ))}
-            </div>
-          )}
+          {/* Short supporting line, directly under the screen it describes */}
+          <p className="mt-6 text-[15px] leading-relaxed text-[#64748b]" style={{ maxWidth: "34ch" }}>
+            {ch.body}
+          </p>
         </motion.article>
       ))}
     </div>
@@ -1202,7 +1167,8 @@ function CTASection() {
 
 // ─── Footer ───────────────────────────────────────────────────────────────────
 
-function Footer() {
+function Footer({ nav }: { nav: Nav }) {
+  const anchor = useAnchor(nav);
   return (
     <footer className="border-t border-[#e7e5e4] py-10 px-4" style={{ zIndex: 1, position: "relative" }}>
       <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-5">
@@ -1219,11 +1185,17 @@ function Footer() {
             <div className="text-base font-bold text-[#1e293b] leading-none">SHG</div>
           </div>
         </div>
-        <div className="flex gap-6 text-sm text-[#64748b] font-medium">
-          <a href="#product" className="hover:text-[#00a697] transition-colors">Product</a>
-          <a href="#impact" className="hover:text-[#00a697] transition-colors">Impact</a>
-          <a href="#faq" className="hover:text-[#00a697] transition-colors">FAQ</a>
-          <a href="#" className="hover:text-[#00a697] transition-colors">Privacy</a>
+        <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-[#64748b] font-medium">
+          <a href="#product" onClick={anchor("#product")} className="hover:text-[#00a697] transition-colors">Product</a>
+          {SHOW_IMPACT && <a href="#impact" onClick={anchor("#impact")} className="hover:text-[#00a697] transition-colors">Impact</a>}
+          <a href="#faq" onClick={anchor("#faq")} className="hover:text-[#00a697] transition-colors">FAQ</a>
+          <a
+            href={BASE + PRIVACY_PATH}
+            onClick={(e) => { e.preventDefault(); nav.navigate(PRIVACY_PATH); }}
+            className="hover:text-[#00a697] transition-colors"
+          >
+            Privacy Policy
+          </a>
         </div>
         <div className="text-xs text-[#94a3b8]">© 2025 Ozey. Built for Indian SHGs.</div>
       </div>
@@ -1234,20 +1206,28 @@ function Footer() {
 // ─── Root ─────────────────────────────────────────────────────────────────────
 
 export default function App() {
+  const nav = useRoute();
+
   return (
     <div className="min-h-screen overflow-x-clip" style={{ fontFamily: "'Inter', sans-serif", background: "#fffdf5" }}>
       <Background />
-      <Navbar />
+      <Navbar nav={nav} />
       <main style={{ position: "relative", zIndex: 1 }}>
-        <HeroSection />
-        <ProblemSection />
-        <WalkthroughSection />
-        <ImpactSection />
-        <RolesSection />
-        <FAQSection />
-        <CTASection />
+        {nav.route === PRIVACY_PATH ? (
+          <PrivacyPolicyPage />
+        ) : (
+          <>
+            <HeroSection />
+            <ProblemSection />
+            <WalkthroughSection />
+            {SHOW_IMPACT && <ImpactSection />}
+            <RolesSection />
+            <FAQSection />
+            <CTASection />
+          </>
+        )}
       </main>
-      <Footer />
+      <Footer nav={nav} />
     </div>
   );
 }
