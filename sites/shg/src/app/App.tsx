@@ -736,7 +736,7 @@ function ChapterContent({ chapter, isActive, stepNum }: { chapter: Chapter; isAc
     <motion.div
       animate={{ opacity: isActive ? 1 : 0.22 }}
       transition={{ duration: 0.35 }}
-      className="max-w-xs"
+      className="w-full md:max-w-xs"
     >
       {/* Step line */}
       <div className="flex items-center gap-3 mb-5">
@@ -749,12 +749,15 @@ function ChapterContent({ chapter, isActive, stepNum }: { chapter: Chapter; isAc
 
       <p className="text-[11px] font-bold text-[#00a697] uppercase tracking-widest mb-2">{chapter.label}</p>
 
-      <h2 className="text-4xl sm:text-5xl font-medium text-[#1e293b] leading-[1.1] tracking-tight mb-4">
+      <h2
+        className="font-medium text-[#1e293b] leading-[1.08] tracking-tight mb-4"
+        style={{ fontSize: "clamp(30px, 8.2vw, 48px)" }}
+      >
         {chapter.headline}<br />
         <span className="font-extrabold text-[#00a697]">{chapter.accent}</span>
       </h2>
 
-      <p className="text-[15px] text-[#64748b] leading-relaxed mb-8">{chapter.body}</p>
+      <p className="text-[15px] text-[#64748b] leading-relaxed mb-6 md:mb-8">{chapter.body}</p>
 
       <div className="space-y-3">
         {chapter.benefits.map((b, i) => (
@@ -780,6 +783,17 @@ function WalkthroughSection() {
   const [direction, setDirection] = useState(1);
   const activeIdxRef = useRef(0);
   const triggerRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  // Mobile phone size tracks the viewport: clamp(220px, 62vw, 300px)
+  const [phoneW, setPhoneW] = useState(240);
+  useEffect(() => {
+    const calc = () => setPhoneW(Math.round(Math.max(220, Math.min(window.innerWidth * 0.62, 300))));
+    calc();
+    window.addEventListener("resize", calc);
+    return () => window.removeEventListener("resize", calc);
+  }, []);
+  const phoneH = (w: number, shot?: string) =>
+    shot ? Math.round((w - 6) * (2400 / 1080)) + 6 : Math.round(w * 2.04);
 
   const handleEnter = useCallback((idx: number) => {
     setDirection(idx >= activeIdxRef.current ? 1 : -1);
@@ -879,64 +893,48 @@ function WalkthroughSection() {
         </div>
       </div>
 
-      {/* ── Mobile ───────────────────────────────────────────────── */}
-      <div className="md:hidden">
-        {/* Sticky phone header */}
-        <div className="sticky top-14 z-20 bg-[#fffdf5]/95 backdrop-blur-md py-4 flex flex-col items-center gap-3 border-b border-[#f1f5f9]">
-          {/* Progress */}
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-mono font-bold text-[#94a3b8] tracking-widest">{stepLabel}</span>
-            <div className="flex gap-1">
-              {CHAPTERS.map((_, i) => (
-                <motion.div
-                  key={i}
-                  className="rounded-full"
-                  animate={{ width: activeIdx === i ? 16 : 5, background: activeIdx === i ? "#00a697" : "#cbd5e1" }}
-                  transition={{ duration: 0.35 }}
-                  style={{ height: 5 }}
-                />
-              ))}
-            </div>
-          </div>
-          {/* Phone — screen slides like a swipe on chapter change */}
-          <PhoneMockup
-            w={240}
-            h={activeChapter?.screenshot ? Math.round((240 - 6) * (2400 / 1080)) + 6 : 490}
-            screenshot={activeChapter?.screenshot}
-            hideIsland={!!activeChapter?.screenshot}
-            direction={direction}
-          />
-        </div>
+      {/* ── Mobile — single-column story, one block per feature ──── */}
+      <div className="md:hidden" style={{ paddingInline: 20, overflowX: "hidden" }}>
+        {CHAPTERS.map((ch, i) => (
+          <motion.article
+            key={ch.id}
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-8% 0px -8% 0px" }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            className="flex flex-col"
+            style={{ paddingTop: i === 0 ? 8 : 40, paddingBottom: 8 }}
+          >
+            {/* Feature number · category · headline · description · benefits */}
+            <ChapterContent chapter={ch} isActive stepNum={i + 1} />
 
-        {/* Scrolling chapters */}
-        <div className="px-6">
-          {CHAPTERS.map((ch, i) => (
-            <div
-              key={ch.id}
-              ref={(el) => { triggerRefs.current[i] = el; }}
-              className="flex items-start flex-col gap-6"
-              style={{ minHeight: "90vh", paddingTop: 48, paddingBottom: 40 }}
-            >
-              <ChapterContent chapter={ch} isActive={activeIdx === i} stepNum={i + 1} />
-
-              {/* Show floating cards below content on mobile */}
-              {activeIdx === i && (
-                <div className="flex flex-col gap-2">
-                  {ch.floatingCards.map((card, ci) => (
-                    <FloatingCard
-                      key={ci}
-                      icon={card.icon}
-                      label={card.label}
-                      value={card.value}
-                      badge={card.badge}
-                      delay={ci * 0.1}
-                    />
-                  ))}
-                </div>
-              )}
+            {/* App frame — sized from the viewport, never wider than it */}
+            <div className="mt-7 flex justify-center">
+              <PhoneMockup
+                w={phoneW}
+                h={phoneH(phoneW, ch.screenshot)}
+                screenshot={ch.screenshot}
+                hideIsland={!!ch.screenshot}
+              />
             </div>
-          ))}
-        </div>
+
+            {/* At most two contextual cards, kept fully inside the viewport */}
+            {ch.floatingCards.length > 0 && (
+              <div className="mt-5 flex flex-col items-center gap-2">
+                {ch.floatingCards.slice(0, 2).map((card, ci) => (
+                  <FloatingCard
+                    key={ci}
+                    icon={card.icon}
+                    label={card.label}
+                    value={card.value}
+                    badge={card.badge}
+                    delay={ci * 0.08}
+                  />
+                ))}
+              </div>
+            )}
+          </motion.article>
+        ))}
       </div>
     </section>
   );
