@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence, useInView } from "motion/react";
-import { Header, type Page } from "./components/site/Header";
+import { Header } from "./components/site/Header";
+import { useRoute } from "./router";
 import { Footer } from "./components/site/Footer";
 import { Hero } from "./sections/Hero";
 import { CurrentReality } from "./sections/CurrentReality";
@@ -125,11 +126,13 @@ function ProductsPage() {
 
 // ─── App ──────────────────────────────────────────────────────────────────────
 export default function App() {
-  const [page, setPage] = useState<Page>("home");
+  // Real URLs rather than local state, so /about and /products are
+  // addressable, shareable and crawlable. See ./router.
+  const { page, navigate } = useRoute();
 
   return (
     <div style={{ background: "var(--surface-canvas)", minHeight: "100vh", color: "var(--text-primary)" }}>
-      <Header page={page} onNav={setPage} />
+      <Header page={page} onNav={navigate} />
       <main id="main-content">
         <AnimatePresence mode="wait">
           {page === "home" && (
@@ -138,8 +141,8 @@ export default function App() {
               <CurrentReality />
               <RespectGap />
               <Infrastructure />
-              <ProductsShowcase onNav={setPage} />
-              <Gateways onNav={setPage} />
+              <ProductsShowcase onNav={navigate} />
+              <Gateways onNav={navigate} />
             </motion.div>
           )}
           {page === "about" && (

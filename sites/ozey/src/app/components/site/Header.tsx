@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { OzeyWordmark } from "./brand";
 import { VisuallyHidden } from "../primitives";
+import { pathFor } from "../../router";
 
 export type Page = "home" | "about" | "products";
 
@@ -22,15 +23,20 @@ export function Header({ page, onNav }: { page: Page; onNav: (p: Page) => void }
         Skip to content
       </a>
       <div className="container-page site-header-inner">
-        <button
-          type="button"
+        <a
           className="site-header-brand"
-          onClick={() => onNav("home")}
+          href={pathFor("home")}
+          onClick={(e) => {
+            // Let modified clicks (new tab, download) behave natively.
+            if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+            e.preventDefault();
+            onNav("home");
+          }}
           aria-current={page === "home" ? "page" : undefined}
         >
           <OzeyWordmark height={18} />
           <VisuallyHidden>Ozey — home</VisuallyHidden>
-        </button>
+        </a>
       </div>
     </header>
   );

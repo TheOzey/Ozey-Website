@@ -63,7 +63,7 @@ function ProductCard({
         "card-surface card-surface-product card-interactive",
         "product-card focus-item signal-border",
       )}
-      href={href ?? "#products"}
+      href={href ?? "/products"}
       onClick={handleClick}
       aria-label={`${product.name} — ${product.platform}`}
       {...(href ? { target: "_blank", rel: "noopener noreferrer" } : {})}

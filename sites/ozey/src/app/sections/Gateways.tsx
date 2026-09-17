@@ -1,6 +1,7 @@
 import { Reveal } from "./Reveal";
 import { ArrowUpRightIcon } from "../components/icons";
 import type { Page } from "../components/site/Header";
+import { pathFor } from "../router";
 
 /**
  * Gateways — quiet navigation into About and Products. Deliberately
@@ -29,10 +30,14 @@ export function Gateways({ onNav }: { onNav: (p: Page) => void }) {
         <div className="gateways-grid">
           {GATEWAYS.map((g, i) => (
             <Reveal key={g.target} delay={i * 120}>
-              <button
-                type="button"
+              <a
                 className="gateway-card card-surface card-interactive"
-                onClick={() => onNav(g.target)}
+                href={pathFor(g.target)}
+                onClick={(e) => {
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+                  e.preventDefault();
+                  onNav(g.target);
+                }}
               >
                 <span className="type-label-sm type-label-caps section-label">{g.label}</span>
                 <span className="type-heading-md">{g.heading}</span>
@@ -40,7 +45,7 @@ export function Gateways({ onNav }: { onNav: (p: Page) => void }) {
                 <span className="gateway-arrow" aria-hidden>
                   <ArrowUpRightIcon size="inline" />
                 </span>
-              </button>
+              </a>
             </Reveal>
           ))}
         </div>
