@@ -1,0 +1,15 @@
+{
+  "name": "Ozey SHG",
+  "short_name": "Ozey SHG",
+  "description": "A free Android app for Self Help Groups in India. Keep members, monthly savings, loans, meetings and the group ledger in one place.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fffdf5",
+  "theme_color": "#00a697",
+  "lang": "en",
+  "dir": "ltr",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

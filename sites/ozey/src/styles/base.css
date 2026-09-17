@@ -1,0 +1,87 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   OZEY BASE LAYER — global element defaults built on tokens.css.
+   Accessibility and reduced-motion foundations live here.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@layer base {
+  html {
+    background: var(--surface-canvas);
+    color-scheme: dark;
+  }
+
+  body {
+    background: var(--surface-canvas);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: var(--type-body-md-size);
+    line-height: var(--type-body-md-leading);
+    letter-spacing: var(--tracking-body);
+    font-weight: var(--type-body-weight);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    letter-spacing: var(--tracking-heading);
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  p {
+    max-width: var(--measure-body);
+  }
+
+  ::selection {
+    background: rgba(57, 198, 232, 0.28);
+    color: var(--text-primary);
+  }
+
+  /* Visible keyboard focus everywhere; invisible for pointer interaction. */
+  :focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
+    border-radius: var(--radius-sm);
+  }
+
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+}
+
+/* Skip link — first tabbable element, visible only when focused. */
+.skip-link {
+  position: fixed;
+  top: var(--space-3);
+  left: var(--space-3);
+  z-index: var(--z-toast);
+  padding: var(--space-3) var(--space-5);
+  background: var(--surface-subtle);
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  font-size: var(--type-body-sm-size);
+  text-decoration: none;
+  transform: translateY(calc(-100% - var(--space-6)));
+}
+
+.skip-link:focus-visible {
+  transform: none;
+}
+
+/* Reduced motion: nothing breaks, nothing is withheld — everything simply
+   appears instead of moving. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

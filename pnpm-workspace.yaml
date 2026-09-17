@@ -1,0 +1,22 @@
+packages:
+  - 'sites/*'
+
+# pnpm 11+ reads allowBuilds; pnpm 10 reads onlyBuiltDependencies. Both are
+# listed so an install needs no `pnpm approve-builds` step on either version.
+allowBuilds:
+  '@tailwindcss/oxide': true
+  esbuild: true
+
+onlyBuiltDependencies:
+  - '@tailwindcss/oxide'
+  - esbuild
+
+supportedArchitectures:
+  os:
+    - darwin
+    - linux
+  cpu:
+    - x64
+    - arm64
+  libc:
+    - glibc

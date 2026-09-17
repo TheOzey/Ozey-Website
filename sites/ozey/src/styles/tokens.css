@@ -1,0 +1,256 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   OZEY DESIGN TOKENS — the single canonical token source.
+   Derived from DESIGN-SYSTEM.md (Ozey Design System v1.0).
+   Every color, size, curve, and duration used anywhere in the product must
+   reference a token defined here. Do not define design values elsewhere.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Surfaces ─────────────────────────────────────────────────────────────
+     Never pure black everywhere; small surface differences create depth
+     without visible shadows. */
+  --surface-canvas: #050607;
+  --surface-section: #0a0c0f;
+  --surface-card: #101318;
+  --surface-elevated: #151920;
+  --surface-subtle: #1b2028;
+  --surface-overlay-scrim: rgba(5, 6, 7, 0.72);
+
+  /* ── Text (slate hierarchy) ─────────────────────────────────────────────── */
+  --text-primary: #f5f7fa;
+  --text-secondary: #b8c0cc;
+  --text-tertiary: #7c8796;
+  --text-muted: #4c5664;
+  --text-inverse: #07101c;
+
+  /* ── Borders & decoration ────────────────────────────────────────────────
+     Slate-based, never pure white. Gradient borders appear only during
+     interaction, never permanently. */
+  --border-subtle: rgba(148, 163, 184, 0.1);
+  --border-default: rgba(148, 163, 184, 0.16);
+  --border-strong: rgba(148, 163, 184, 0.26);
+  --grid-subtle: rgba(148, 163, 184, 0.055);
+
+  /* ── Ozey gradient ───────────────────────────────────────────────────────
+     Direction is always ↗ bottom-left to top-right (135deg), matching the
+     logo slash. Color is not decoration; color is a signal. */
+  --ozey-angle: 135deg;
+  --ozey-stop-1: #ff3b5c; /* red    */
+  --ozey-stop-2: #ff9f32; /* orange */
+  --ozey-stop-3: #ffd84d; /* yellow */
+  --ozey-stop-4: #39c6e8; /* cyan   */
+  --ozey-stop-5: #7b61ff; /* violet */
+  --ozey-stop-6: #d94ce6; /* pink   */
+
+  /* Gradient roles — each role has its own definition; never reuse one
+     implementation for every role. */
+
+  /* Identity: logo slash, app icons, favicon, social preview, splash.
+     Always identical. Never animated. */
+  --gradient-identity: linear-gradient(
+    var(--ozey-angle),
+    var(--ozey-stop-1) 0%,
+    var(--ozey-stop-2) 22%,
+    var(--ozey-stop-3) 39%,
+    var(--ozey-stop-4) 64%,
+    var(--ozey-stop-5) 82%,
+    var(--ozey-stop-6) 100%
+  );
+
+  /* Intelligence: text only, one phrase per section, 100% opacity. */
+  --gradient-intelligence: var(--gradient-identity);
+
+  /* Aurora: hero atmosphere only — a soft light field, never saturated,
+     no hard edges. Applied at 5–12% opacity via --gradient-aurora-opacity. */
+  --gradient-aurora: linear-gradient(
+    var(--ozey-angle),
+    var(--glow-warm) 0%,
+    var(--glow-cyan) 45%,
+    var(--glow-violet) 75%,
+    var(--glow-magenta) 100%
+  );
+  --gradient-aurora-opacity: 0.08;
+
+  /* Signal: small travelling highlight (CTA hover, active nav, progress,
+     selection, hover border). 120–180px long, transparent at both ends. */
+  --gradient-signal: linear-gradient(
+    var(--ozey-angle),
+    transparent 0%,
+    var(--ozey-stop-4) 35%,
+    var(--ozey-stop-5) 65%,
+    transparent 100%
+  );
+  --signal-length: 160px;
+  --signal-border-opacity: 0.3;
+
+  /* Card reflection: one faint gradient light per product card, ~12%. */
+  --gradient-card-reflection: linear-gradient(
+    var(--ozey-angle),
+    transparent 0%,
+    rgba(57, 198, 232, 0.12) 55%,
+    rgba(123, 97, 255, 0.12) 100%
+  );
+
+  /* Gradient opacity ceilings by role */
+  --gradient-opacity-hero: 0.08;
+  --gradient-opacity-border: 0.3;
+  --gradient-opacity-hover: 0.18;
+  --gradient-opacity-reflection: 0.12;
+
+  /* Supporting glows — soft atmospheric light only; never all four at
+     full strength together. */
+  --glow-cyan: rgba(57, 198, 232, 0.2);
+  --glow-violet: rgba(123, 97, 255, 0.18);
+  --glow-magenta: rgba(217, 76, 230, 0.14);
+  --glow-warm: rgba(255, 159, 50, 0.12);
+
+  /* Gradient blur levels — never smaller; tiny blur looks cheap. */
+  --blur-soft: 40px;
+  --blur-medium: 80px;
+  --blur-deep: 120px;
+
+  /* ── Typography ──────────────────────────────────────────────────────────
+     SF Pro via the system stack; Apple devices render genuine SF Pro,
+     everywhere else falls back safely. Never bundle Apple font files. */
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+    "Helvetica Neue", Arial, sans-serif;
+  --font-mono:
+    ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Type scale — fluid desktop↔mobile via clamp(). */
+  --type-display-hero-size: clamp(44px, 3.05vw + 32.8px, 72px);
+  --type-display-hero-weight: 700;
+  --type-display-hero-leading: 0.98;
+
+  --type-display-section-size: clamp(38px, 1.96vw + 30.7px, 56px);
+  --type-display-section-weight: 650;
+  --type-display-section-leading: 1.02;
+
+  --type-heading-xl-size: clamp(32px, 0.87vw + 28.7px, 40px);
+  --type-heading-xl-weight: 650;
+  --type-heading-xl-leading: 1.08;
+
+  --type-heading-lg-size: clamp(26px, 0.44vw + 24.4px, 30px);
+  --type-heading-lg-weight: 600;
+  --type-heading-lg-leading: 1.15;
+
+  --type-heading-md-size: clamp(20px, 0.22vw + 19.2px, 22px);
+  --type-heading-md-weight: 600;
+  --type-heading-md-leading: 1.2;
+
+  --type-body-lg-size: clamp(18px, 0.11vw + 17.6px, 19px);
+  --type-body-lg-leading: 1.5;
+
+  --type-body-md-size: 16px;
+  --type-body-md-leading: 1.55;
+
+  --type-body-sm-size: 14px;
+  --type-body-sm-leading: 1.45;
+
+  --type-body-weight: 400;
+
+  --type-label-md-size: 13px;
+  --type-label-md-weight: 550;
+  --type-label-md-leading: 1.2;
+
+  --type-label-sm-size: 11px;
+  --type-label-sm-weight: 600;
+  --type-label-sm-leading: 1.2;
+
+  /* Tracking — em-based, never extreme. */
+  --tracking-heading: -0.025em;
+  --tracking-body: -0.005em;
+  --tracking-label: 0.04em;
+
+  /* Text measure — body copy stays around 45–65 characters. */
+  --measure-body: 65ch;
+
+  /* ── Spacing (4px base — no arbitrary values) ───────────────────────────── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+  --space-32: 128px;
+  --space-40: 160px;
+
+  /* ── Layout ─────────────────────────────────────────────────────────────── */
+  --page-max-width: 1440px;
+  --content-max-width: 1280px;
+  --reading-max-width: 720px;
+  --page-gutter: clamp(24px, 5vw, 80px);
+  --section-padding-block: clamp(96px, 12vw, 180px);
+  --grid-columns: 12;
+  --grid-gap: 24px;
+  --grid-gap-tablet: 20px;
+  --grid-gap-mobile: 16px;
+
+  /* ── Radii ──────────────────────────────────────────────────────────────── */
+  --radius-sm: 10px; /* chips, tags                */
+  --radius-md: 16px; /* buttons, compact surfaces  */
+  --radius-lg: 24px; /* navigation / gateway cards */
+  --radius-xl: 32px; /* main product cards         */
+  --radius-2xl: 44px; /* hero visual containers     */
+  --radius-pill: 999px;
+  --radius-product-card: var(--radius-xl);
+  --radius-gateway-card: var(--radius-lg);
+
+  /* ── Shadows — sparing; depth comes from surfaces and borders ──────────── */
+  --shadow-card: 0 24px 80px rgba(0, 0, 0, 0.28);
+  --shadow-card-hover: 0 32px 100px rgba(0, 0, 0, 0.4);
+  --shadow-overlay: 0 40px 120px rgba(0, 0, 0, 0.52);
+
+  /* ── Controls ───────────────────────────────────────────────────────────── */
+  --control-height-sm: 36px;
+  --control-height-md: 44px;
+  --control-height-lg: 52px;
+
+  /* ── Icons ──────────────────────────────────────────────────────────────── */
+  --icon-nav: 16px;
+  --icon-inline: 18px;
+  --icon-button: 20px;
+  --icon-card-action: 20px;
+  --icon-feature: 24px;
+  --icon-marker: 32px;
+  --icon-stroke: 1.5;
+
+  /* ── Motion ─────────────────────────────────────────────────────────────
+     Calm, intelligent, precise, patient. Nothing pops or bounces. */
+  --motion-distance-sm: 8px;
+  --motion-distance-md: 16px;
+  --motion-distance-lg: 24px;
+
+  --motion-reveal-duration: 800ms; /* reveal family: 600–900ms */
+  --motion-glow-duration: 4s;
+  --motion-rest-duration: 8s;
+  --motion-travel-duration: 1.2s;
+  --motion-fade-duration: 800ms;
+  --motion-hover-duration: 300ms;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* Focus family: siblings quiet down to 88%; the hovered element stays 100%. */
+  --focus-dim-opacity: 0.88;
+
+  /* ── Focus ring ─────────────────────────────────────────────────────────── */
+  --focus-ring-color: var(--ozey-stop-4);
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 3px;
+
+  /* ── Z-index layers ─────────────────────────────────────────────────────── */
+  --z-base: 0;
+  --z-atmosphere: 1; /* aurora, orbit canvas        */
+  --z-content: 10;
+  --z-header: 50;
+  --z-overlay: 100;
+  --z-toast: 200;
+}
