@@ -6,8 +6,7 @@ import {
   ArrowRight, Shield, Smartphone, Star, Sparkles,
 } from "lucide-react";
 import imgPlayStore from "@/imports/MacBookPro141/88b9df5eb5bdd63e4273c402c2c65973540fd514.png";
-import imgLogoIcon from "@/imports/MacBookPro141/699240ac7265fd30698f4cbddf52104368a7a9f7.png";
-import { imgVector } from "@/imports/MacBookPro141/svg-opo0u";
+import imgLogo from "@/imports/logo.png";
 import imgHomeScreen from "@/imports/home.png";
 import imgMembers from "@/imports/members.png";
 import imgPayments from "@/imports/payments.png";
@@ -268,13 +267,7 @@ function Navbar({ nav }: { nav: Nav }) {
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16">
           <a href="#" onClick={anchor("#")} className="flex items-center gap-3 shrink-0">
-            <div className="relative w-11 h-11">
-              <div className="absolute inset-0 bg-[#00a697] rounded-2xl" />
-              <div className="absolute inset-[13%] bg-[#ffedd5] rounded-xl" />
-              <div className="absolute inset-[18%]" style={{ maskImage: `url("${imgVector}")`, maskSize: "cover", maskRepeat: "no-repeat" }}>
-                <img src={imgLogoIcon} alt="" className="w-full h-full object-contain" />
-              </div>
-            </div>
+            <img src={imgLogo} alt="" className="w-11 h-11 shrink-0" />
             <div className="flex flex-col leading-none">
               <span className="text-[11px] text-[#64748b] font-medium tracking-wide">Ozey</span>
               <span className="text-lg font-bold text-[#1e293b] tracking-tight">SHG</span>
@@ -1173,13 +1166,7 @@ function Footer({ nav }: { nav: Nav }) {
     <footer className="border-t border-[#e7e5e4] py-10 px-4" style={{ zIndex: 1, position: "relative" }}>
       <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-5">
         <div className="flex items-center gap-3">
-          <div className="relative w-9 h-9">
-            <div className="absolute inset-0 bg-[#00a697] rounded-xl" />
-            <div className="absolute inset-[12%] bg-[#ffedd5] rounded-lg" />
-            <div className="absolute inset-[18%]" style={{ maskImage: `url("${imgVector}")`, maskSize: "cover", maskRepeat: "no-repeat" }}>
-              <img src={imgLogoIcon} alt="" className="w-full h-full object-contain" />
-            </div>
-          </div>
+          <img src={imgLogo} alt="" className="w-9 h-9 shrink-0" />
           <div>
             <div className="text-xs text-[#64748b]">Ozey</div>
             <div className="text-base font-bold text-[#1e293b] leading-none">SHG</div>
