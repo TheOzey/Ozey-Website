@@ -3,8 +3,74 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ozey SHG</title>
+
+    <title>Ozey SHG — Run your Self Help Group with confidence, not paperwork</title>
+    <meta name="description" content="Ozey SHG is a free Android app for Self Help Groups in India. Keep members, monthly savings, loans, meetings and the group ledger in one place." />
+    <link rel="canonical" href="https://shg.ozey.in/" />
+
+    <!-- Browser & theme -->
+    <meta name="theme-color" content="#fffdf5" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#00a697" media="(prefers-color-scheme: dark)" />
+    <meta name="color-scheme" content="light" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Ozey SHG" />
+    <meta property="og:locale" content="en_IN" />
+    <meta property="og:title" content="Ozey SHG — Run your Self Help Group with confidence, not paperwork" />
+    <meta property="og:description" content="A free Android app for Self Help Groups in India. Keep members, monthly savings, loans, meetings and the group ledger in one place." />
+    <meta property="og:url" content="https://shg.ozey.in/" />
+    <meta property="og:image" content="https://shg.ozey.in/icon-512.png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:image:alt" content="Ozey SHG" />
+
+    <!-- Twitter / X card -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:site" content="@ozeyindia" />
+    <meta name="twitter:creator" content="@ozeyindia" />
+    <meta name="twitter:title" content="Ozey SHG — Run your Self Help Group with confidence, not paperwork" />
+    <meta name="twitter:description" content="A free Android app for Self Help Groups in India. Keep members, monthly savings, loans, meetings and the group ledger in one place." />
+    <meta name="twitter:image" content="https://shg.ozey.in/icon-512.png" />
+    <meta name="twitter:image:alt" content="Ozey SHG" />
+
+    <!-- Icons & manifest. No SVG icon is declared on purpose: browsers prefer
+         an SVG over the .ico, which has caused the wrong mark to be shown. -->
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <!-- Structured data. Every value below is stated on the site itself:
+         a free Android app for Self Help Groups. No ratings, download
+         counts or other unverified claims are asserted. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Ozey SHG",
+        "url": "https://shg.ozey.in/",
+        "description": "A free Android app for Self Help Groups in India. Keep members, monthly savings, loans, meetings and the group ledger in one place.",
+        "applicationCategory": "FinanceApplication",
+        "operatingSystem": "Android",
+        "inLanguage": "en-IN",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "INR"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Ozey",
+          "url": "https://ozey.in",
+          "email": "hello@ozey.in"
+        }
+      }
+    </script>
   </head>
+
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>

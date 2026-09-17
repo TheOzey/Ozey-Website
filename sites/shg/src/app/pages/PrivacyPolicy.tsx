@@ -388,10 +388,31 @@ function Contents({ activeId }: { activeId: string }) {
 export default function PrivacyPolicyPage() {
   const [activeId, setActiveId] = useState(SECTIONS[0].id);
 
+  // Title and canonical both describe the page, so they move together. A
+  // canonical left pointing at the homepage would tell search engines this
+  // page is a duplicate of "/", undoing its own entry in the sitemap.
   useEffect(() => {
-    const prev = document.title;
-    document.title = "Privacy Policy — Ozey SHG";
-    return () => { document.title = prev; };
+    const url = "https://shg.ozey.in/privacy-policy";
+    const title = "Privacy Policy — Ozey SHG";
+
+    const canonical = document.head.querySelector('link[rel="canonical"]');
+    const ogUrl = document.head.querySelector('meta[property="og:url"]');
+
+    const prev = {
+      title: document.title,
+      canonical: canonical?.getAttribute("href") ?? null,
+      ogUrl: ogUrl?.getAttribute("content") ?? null,
+    };
+
+    document.title = title;
+    canonical?.setAttribute("href", url);
+    ogUrl?.setAttribute("content", url);
+
+    return () => {
+      document.title = prev.title;
+      if (prev.canonical !== null) canonical?.setAttribute("href", prev.canonical);
+      if (prev.ogUrl !== null) ogUrl?.setAttribute("content", prev.ogUrl);
+    };
   }, []);
 
   useEffect(() => {
