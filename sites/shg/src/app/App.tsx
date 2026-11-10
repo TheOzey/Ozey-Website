@@ -1272,7 +1272,7 @@ function Footer({ nav }: { nav: Nav }) {
             Privacy Policy
           </a>
         </div>
-        <div className="text-xs text-[#94a3b8]">© 2025 Ozey. Built for Indian SHGs.</div>
+        <div className="text-xs text-[#94a3b8]">© 2027 Ozey. Built for Indian SHGs.</div>
       </div>
       <nav aria-label="Social" className="mt-8 flex items-center justify-center gap-6">
         {SOCIAL_LINKS.map(({ label, href, icon, hoverClass }) => (
