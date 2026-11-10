@@ -5,6 +5,21 @@ import {
   Check, ChevronDown, Menu, X, Globe,
   ArrowRight, Shield, Smartphone, Star, Sparkles,
 } from "lucide-react";
+import {
+  Notebook,
+  Calculator,
+  Prohibit,
+  Cloud,
+  LinkSimple,
+  CheckCircle,
+  IdentificationBadge,
+  ClipboardText,
+  FlowerLotus,
+  Sparkle,
+  WhatsappLogo,
+  YoutubeLogo,
+  type Icon as PhosphorIcon,
+} from "@phosphor-icons/react";
 import imgPlayStore from "@/imports/MacBookPro141/88b9df5eb5bdd63e4273c402c2c65973540fd514.png";
 import imgLogo from "@/imports/logo.png";
 import imgHomeScreen from "@/imports/home.png";
@@ -17,6 +32,28 @@ import imgReports from "@/imports/reports.png";
 import PrivacyPolicyPage from "./pages/PrivacyPolicy";
 
 const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.ozey.shg";
+
+/** Phosphor duotone with a distinct secondary fill — keeps the emoji colour cue. */
+function MulticolorIcon({
+  Icon,
+  size = 36,
+  primary,
+  secondary,
+}: {
+  Icon: PhosphorIcon;
+  size?: number;
+  primary: string;
+  secondary: string;
+}) {
+  return (
+    <span
+      className="inline-flex shrink-0 [&_path[opacity='0.2']]:!opacity-[0.55] [&_path[opacity='0.2']]:!fill-[var(--icon-secondary)]"
+      style={{ color: primary, ["--icon-secondary" as string]: secondary }}
+    >
+      <Icon weight="duotone" size={size} color={primary} aria-hidden />
+    </span>
+  );
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -500,44 +537,6 @@ function PhoneAnnotation({
  * filter to survive the dark button, which destroyed the mark. This scales
  * cleanly and keeps the brand colours on any background.
  */
-function SocialIcon({ size = 22, children }: { size?: number; children: React.ReactNode }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor">
-      {children}
-    </svg>
-  );
-}
-
-const SOCIAL_LINKS = [
-  {
-    label: "WhatsApp",
-    href: "https://whatsapp.com/channel/0029Vb9QgZQL7UVMFVPr4U0C",
-    icon: (
-      <SocialIcon>
-        <path d="M12.04 2C6.58 2 2.15 6.4 2.15 11.83c0 1.74.46 3.44 1.34 4.94L2 22l5.39-1.41a10 10 0 0 0 4.65 1.18h.01c5.46 0 9.89-4.4 9.89-9.83C21.94 6.4 17.5 2 12.04 2zm5.76 13.92c-.24.68-1.4 1.3-1.94 1.38-.5.07-1.12.1-1.81-.11-.42-.13-.95-.31-1.64-.6-2.88-1.24-4.76-4.14-4.9-4.33-.14-.19-1.15-1.53-1.15-2.92 0-1.39.73-2.07.99-2.35.26-.28.57-.35.76-.35h.55c.17 0 .41-.07.64.49.24.58.81 2 .88 2.15.07.14.12.32.02.51-.09.19-.14.31-.28.48-.14.17-.29.37-.42.5-.14.14-.28.28-.12.55.16.26.7 1.16 1.51 1.88 1.04.92 1.91 1.21 2.18 1.35.26.14.42.12.58-.07.16-.19.66-.77.84-1.03.17-.26.35-.22.58-.13.24.09 1.5.71 1.76.84.26.13.43.19.49.3.07.1.07.61-.17 1.29z" />
-      </SocialIcon>
-    ),
-  },
-  {
-    label: "YouTube",
-    href: "https://www.youtube.com/@OzeySHG",
-    icon: (
-      <SocialIcon>
-        <path d="M23 12.2s0-3.2-.4-4.6c-.22-.86-.9-1.54-1.76-1.76C19.24 5.4 12 5.4 12 5.4s-7.24 0-8.84.44c-.86.22-1.54.9-1.76 1.76C1 9 1 12.2 1 12.2s0 3.2.4 4.6c.22.86.9 1.54 1.76 1.76 1.6.44 8.84.44 8.84.44s7.24 0 8.84-.44c.86-.22 1.54-.9 1.76-1.76.4-1.4.4-4.6.4-4.6zM9.75 15.52V8.88l6.08 3.32-6.08 3.32z" />
-      </SocialIcon>
-    ),
-  },
-  {
-    label: "Google Play",
-    href: PLAY_STORE_URL,
-    icon: (
-      <SocialIcon>
-        <path d="M3.06 3.27A1.5 1.5 0 0 0 2.56 4.4v15.22c0 .46.18.86.5 1.12l.08.08 8.56-8.72v-.2L3.14 3.19l-.08.08zm11.49 11.75-2.85-2.92v-.2l2.85-2.92.07.04 3.38 1.92c.97.55.97 1.44 0 1.99l-3.38 1.92-.07.04z" />
-      </SocialIcon>
-    ),
-  },
-];
-
 function GooglePlayIcon({ size = 20 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -548,6 +547,31 @@ function GooglePlayIcon({ size = 20 }: { size?: number }) {
     </svg>
   );
 }
+
+const SOCIAL_LINKS = [
+  {
+    label: "WhatsApp",
+    href: "https://whatsapp.com/channel/0029Vb9QgZQL7UVMFVPr4U0C",
+    hoverClass: "hover:text-[#25D366]",
+    icon: <WhatsappLogo size={24} weight="fill" aria-hidden />,
+  },
+  {
+    label: "YouTube",
+    href: "https://www.youtube.com/@OzeySHG",
+    hoverClass: "hover:text-[#FF0000]",
+    icon: <YoutubeLogo size={24} weight="fill" aria-hidden />,
+  },
+  {
+    label: "Google Play",
+    href: PLAY_STORE_URL,
+    hoverClass: "group",
+    icon: (
+      <span className="inline-flex grayscale opacity-80 transition duration-200 group-hover:grayscale-0 group-hover:opacity-100">
+        <GooglePlayIcon size={22} />
+      </span>
+    ),
+  },
+];
 
 // ─── Hero Section ─────────────────────────────────────────────────────────────
 
@@ -666,12 +690,14 @@ function ProblemSection() {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-16">
           {[
-            { emoji: "📒", title: "Registers get lost", desc: "One missing notebook means months of records gone." },
-            { emoji: "🧮", title: "Errors add up", desc: "Manual calculations lead to disputes and distrust." },
-            { emoji: "🚫", title: "No one can verify", desc: "Members must trust the person holding the register." },
+            { Icon: Notebook, primary: "#C2410C", secondary: "#FDBA74", title: "Registers get lost", desc: "One missing notebook means months of records gone." },
+            { Icon: Calculator, primary: "#475569", secondary: "#CBD5E1", title: "Errors add up", desc: "Manual calculations lead to disputes and distrust." },
+            { Icon: Prohibit, primary: "#DC2626", secondary: "#FECACA", title: "No one can verify", desc: "Members must trust the person holding the register." },
           ].map((p) => (
             <div key={p.title} className="bg-white/60 rounded-3xl p-6 border border-[#e2e8f0]">
-              <div className="text-3xl mb-3">{p.emoji}</div>
+              <div className="mb-3">
+                <MulticolorIcon Icon={p.Icon} primary={p.primary} secondary={p.secondary} />
+              </div>
               <div className="text-base font-semibold text-[#1e293b] mb-1">{p.title}</div>
               <div className="text-sm text-[#64748b] leading-relaxed">{p.desc}</div>
             </div>
@@ -686,12 +712,14 @@ function ProblemSection() {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8">
           {[
-            { emoji: "☁️", title: "Digital records", desc: "Every entry is saved instantly. Always accessible." },
-            { emoji: "🔗", title: "Connected members", desc: "Everyone in the group sees the same information." },
-            { emoji: "✅", title: "Automatic calculations", desc: "Totals, EMIs, and balances calculated in real time." },
+            { Icon: Cloud, primary: "#0284C7", secondary: "#BAE6FD", title: "Digital records", desc: "Every entry is saved instantly. Always accessible." },
+            { Icon: LinkSimple, primary: "#2563EB", secondary: "#93C5FD", title: "Connected members", desc: "Everyone in the group sees the same information." },
+            { Icon: CheckCircle, primary: "#16A34A", secondary: "#86EFAC", title: "Automatic calculations", desc: "Totals, EMIs, and balances calculated in real time." },
           ].map((p) => (
             <div key={p.title} className="bg-[#00a697]/5 rounded-3xl p-6 border border-[#00a697]/15">
-              <div className="text-3xl mb-3">{p.emoji}</div>
+              <div className="mb-3">
+                <MulticolorIcon Icon={p.Icon} primary={p.primary} secondary={p.secondary} />
+              </div>
               <div className="text-base font-semibold text-[#1e293b] mb-1">{p.title}</div>
               <div className="text-sm text-[#475569] leading-relaxed">{p.desc}</div>
             </div>
@@ -1082,21 +1110,27 @@ function RolesSection() {
   const roles = [
     {
       title: "President",
-      emoji: "👩‍💼",
+      Icon: IdentificationBadge,
+      iconPrimary: "#0F766E",
+      iconSecondary: "#5EEAD4",
       color: "#00a697",
       bg: "#00a69710",
       capabilities: ["Manage all member profiles", "Approve and track loans", "Generate bank-ready reports", "View complete group ledger", "Record and review meetings"],
     },
     {
       title: "Secretary",
-      emoji: "📋",
+      Icon: ClipboardText,
+      iconPrimary: "#1E293B",
+      iconSecondary: "#94A3B8",
       color: "#1e293b",
       bg: "#1e293b0d",
       capabilities: ["Record monthly savings", "Take meeting attendance", "Add notes and minutes", "Track individual contributions", "Notify members via SMS"],
     },
     {
       title: "Member",
-      emoji: "🌸",
+      Icon: FlowerLotus,
+      iconPrimary: "#DB2777",
+      iconSecondary: "#F9A8D4",
       color: "#f68712",
       bg: "#f6871210",
       capabilities: ["View personal savings history", "Check loan status & EMI", "See group total in real time", "Access past meeting records", "Download personal statement"],
@@ -1115,7 +1149,9 @@ function RolesSection() {
         <div className="grid sm:grid-cols-3 gap-5">
           {roles.map((r) => (
             <div key={r.title} className="rounded-3xl p-7 border" style={{ background: r.bg, borderColor: r.color + "25" }}>
-              <div className="text-4xl mb-4">{r.emoji}</div>
+              <div className="mb-4">
+                <MulticolorIcon Icon={r.Icon} size={40} primary={r.iconPrimary} secondary={r.iconSecondary} />
+              </div>
               <h3 className="text-xl font-bold mb-5" style={{ color: r.color }}>{r.title}</h3>
               <ul className="space-y-2.5">
                 {r.capabilities.map((c) => (
@@ -1177,7 +1213,9 @@ function CTASection() {
           <div className="absolute top-0 right-0 w-72 h-72 rounded-full opacity-20" style={{ background: "radial-gradient(circle, rgba(255,255,255,0.4) 0%, transparent 70%)" }} />
           <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full opacity-15" style={{ background: "radial-gradient(circle, rgba(255,218,169,0.5) 0%, transparent 70%)" }} />
           <div className="relative z-10">
-            <div className="text-4xl mb-5">🌟</div>
+            <div className="mb-5 flex justify-center">
+              <MulticolorIcon Icon={Sparkle} size={40} primary="#FDE047" secondary="#FFF7ED" />
+            </div>
             <h2 className="text-3xl font-bold text-white mb-3 tracking-tight">Start your SHG's digital journey today.</h2>
             <p className="text-[#b3ede9] text-base leading-relaxed mb-8 max-w-md mx-auto">
               Free for all SHGs. Works on any Android phone. No training needed. Trusted by thousands of women across India.
@@ -1229,14 +1267,14 @@ function Footer({ nav }: { nav: Nav }) {
         <div className="text-xs text-[#94a3b8]">© 2025 Ozey. Built for Indian SHGs.</div>
       </div>
       <nav aria-label="Social" className="mt-8 flex items-center justify-center gap-6">
-        {SOCIAL_LINKS.map(({ label, href, icon }) => (
+        {SOCIAL_LINKS.map(({ label, href, icon, hoverClass }) => (
           <a
             key={label}
             href={href}
             target="_blank"
             rel="noopener noreferrer"
             aria-label={label}
-            className="text-[#64748b] hover:text-[#00a697] transition-colors"
+            className={`text-[#64748b] transition-colors duration-200 ${hoverClass}`}
           >
             {icon}
           </a>
