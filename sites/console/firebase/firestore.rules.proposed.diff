@@ -1,0 +1,125 @@
+--- a/firestore.rules	2026-09-30 20:26:02
++++ b/firestore.rules	2026-09-30 20:26:18
+@@ -73,6 +73,17 @@
+       return isGroupAdmin(groupId) || isApprovedMember(groupId);
+     }
+ 
++    /// Returns true when the caller is verified Ozey internal staff.
++    ///
++    /// `ozeyStaff` is a Firebase Auth custom claim. Custom claims can only be
++    /// set through the Admin SDK (never by a client), and are read from the
++    /// signed ID token — so this check costs no Firestore read and cannot be
++    /// spoofed. Grants READ-ONLY access for the Ozey Console. It is never
++    /// consulted by any write rule.
++    function isOzeyStaff() {
++      return isSignedIn() && request.auth.token.ozeyStaff == true;
++    }
++
+     /// Returns true when the authenticated user owns the member document
+     /// [memberId] in [groupId] — i.e. the admin-maintained memberUids index
+     /// maps their uid to this member. This is the canonical, spoof-proof
+@@ -502,7 +513,7 @@
+     // ──────────────────────────────────────────────────────────────────────
+ 
+     match /groups/{groupId} {
+-      allow read:   if isAdminOrMember(groupId);
++      allow read:   if isOzeyStaff() || isAdminOrMember(groupId);
+       allow create: if isSignedIn()
+                     && request.resource.data.adminUid == request.auth.uid
+                     && request.resource.data.groupId  == groupId;
+@@ -573,7 +584,7 @@
+       // ────────────────────────────────────────────────────────────────────
+ 
+       match /members/{memberId} {
+-        allow read:   if isAdminOrMember(groupId);
++        allow read:   if isOzeyStaff() || isAdminOrMember(groupId);
+         allow create: if isGroupAdmin(groupId)
+                       && request.resource.data.statusIndex == 0;
+         allow update: if isGroupAdmin(groupId)
+@@ -636,7 +647,7 @@
+       // ────────────────────────────────────────────────────────────────────
+ 
+       match /savings/{savingId} {
+-        allow read:   if isAdminOrMember(groupId);
++        allow read:   if isOzeyStaff() || isAdminOrMember(groupId);
+         allow create: if isGroupAdmin(groupId)
+                       && isValidSavingsWrite(request.resource.data, savingId);
+         allow update: if isGroupAdmin(groupId)
+@@ -645,7 +656,7 @@
+       }
+ 
+       match /loans/{loanId} {
+-        allow read:   if isAdminOrMember(groupId);
++        allow read:   if isOzeyStaff() || isAdminOrMember(groupId);
+         allow create: if isGroupAdmin(groupId)
+                       && isValidLoansWrite(request.resource.data, loanId);
+         allow update: if isGroupAdmin(groupId)
+@@ -654,7 +665,7 @@
+       }
+ 
+       match /repayments/{repaymentId} {
+-        allow read:   if isAdminOrMember(groupId);
++        allow read:   if isOzeyStaff() || isAdminOrMember(groupId);
+         allow create: if isGroupAdmin(groupId)
+                       && isValidRepaymentsWrite(request.resource.data, repaymentId);
+         allow update: if isGroupAdmin(groupId)
+@@ -663,7 +674,7 @@
+       }
+ 
+       match /meetings/{meetingId} {
+-        allow read:   if isAdminOrMember(groupId);
++        allow read:   if isOzeyStaff() || isAdminOrMember(groupId);
+         allow create: if isGroupAdmin(groupId)
+                       && isValidMeetingsWrite(request.resource.data, meetingId);
+         allow update: if isGroupAdmin(groupId)
+@@ -672,7 +683,7 @@
+       }
+ 
+       match /monthlyClosures/{closureId} {
+-        allow read:   if isAdminOrMember(groupId);
++        allow read:   if isOzeyStaff() || isAdminOrMember(groupId);
+         allow create: if isGroupAdmin(groupId)
+                       && isValidClosuresWrite(request.resource.data, closureId);
+         allow update: if isGroupAdmin(groupId)
+@@ -692,7 +703,7 @@
+       // ────────────────────────────────────────────────────────────────────
+ 
+       match /openingBalance/{docId} {
+-        allow read:           if isAdminOrMember(groupId);
++        allow read:           if isOzeyStaff() || isAdminOrMember(groupId);
+         allow create, update: if isGroupAdmin(groupId)
+                               && isValidOpeningBalanceWrite(request.resource.data);
+       }
+@@ -710,7 +721,7 @@
+       // ────────────────────────────────────────────────────────────────────
+ 
+       match /openingRepayments/{id} {
+-        allow read:   if isAdminOrMember(groupId);
++        allow read:   if isOzeyStaff() || isAdminOrMember(groupId);
+         allow create: if isGroupAdmin(groupId)
+                       && isValidOpeningRepaymentsWrite(request.resource.data, id);
+         allow update: if isGroupAdmin(groupId)
+@@ -720,6 +731,23 @@
+     }
+ 
+     // ──────────────────────────────────────────────────────────────────────
++    // Ozey Console — collection-group READ access for Ozey staff
++    //
++    // Lets verified staff (isOzeyStaff custom claim) run cross-group queries
++    // such as "latest savings across all groups". Read-only: there is no
++    // write rule here, so writes still fall through to the per-group rules
++    // above (and to the deny-all fallback for anything else).
++    // ──────────────────────────────────────────────────────────────────────
++
++    match /{path=**}/members/{memberId}          { allow read: if isOzeyStaff(); }
++    match /{path=**}/savings/{savingId}          { allow read: if isOzeyStaff(); }
++    match /{path=**}/loans/{loanId}              { allow read: if isOzeyStaff(); }
++    match /{path=**}/repayments/{repaymentId}    { allow read: if isOzeyStaff(); }
++    match /{path=**}/meetings/{meetingId}        { allow read: if isOzeyStaff(); }
++    match /{path=**}/openingRepayments/{id}      { allow read: if isOzeyStaff(); }
++    match /{path=**}/openingBalance/{docId}      { allow read: if isOzeyStaff(); }
++
++    // ──────────────────────────────────────────────────────────────────────
+     // /system/config
+     //
+     // App-wide configuration managed by the development team.

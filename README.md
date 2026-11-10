@@ -5,6 +5,8 @@ pnpm workspace containing the Ozey web properties.
 ```
 sites/
   ozey/     → ozey.in   (corporate)
+  console/  → ozey.in/dashboard  (Ozey Console, internal; see sites/console/README.md)
+  shg/      → SHG marketing site
 docs/       → design system and architecture notes
 ```
 

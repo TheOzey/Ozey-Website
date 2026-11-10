@@ -1,0 +1,45 @@
+{
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "workforce",
+      "runtime": "nodejs22",
+      "ignore": [
+        "node_modules",
+        "src",
+        "lib/**/*.test.js",
+        "*.log"
+      ],
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run build"
+      ]
+    }
+  ],
+  "emulators": {
+    "auth": {
+      "port": 9299
+    },
+    "firestore": {
+      "port": 8280
+    },
+    "functions": {
+      "port": 5201
+    },
+    "hub": {
+      "port": 4480
+    },
+    "logging": {
+      "port": 4580
+    },
+    "ui": {
+      "enabled": false
+    },
+    "eventarc": {
+      "port": 9399
+    }
+  }
+}

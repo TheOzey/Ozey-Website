@@ -1,5 +1,13 @@
 packages:
   - 'sites/*'
+  - 'workforce/functions'
+
+allowBuilds:
+  '@firebase/util': false
+  '@tailwindcss/oxide': true
+  esbuild: true
+  protobufjs: false
+  unrs-resolver: false
 
 onlyBuiltDependencies:
   - '@tailwindcss/oxide'

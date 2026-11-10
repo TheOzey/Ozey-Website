@@ -1,0 +1,804 @@
+rules_version = '2';
+
+//
+// Ozey SHG — Firestore Security Rules
+// Phase 3A.1 baseline
+//
+// Collection structure:
+//
+//   /inviteCodes/{inviteCode}
+//   /groups/{groupId}
+//   /groups/{groupId}/memberUids/{uid}
+//   /groups/{groupId}/members/{memberId}
+//   /groups/{groupId}/joinRequests/{requestId}
+//   /system/config
+//
+// Identity model:
+//   Every operation is gated on request.auth.uid (Firebase Auth UID).
+//   Phone numbers in documents are normalized 10-digit strings; they
+//   are NOT used for identity checks in rules (only request.auth.uid).
+//
+// Admin identification:
+//   The group document stores `adminUid` (the creator's Firebase Auth UID).
+//   All admin-only rules call isGroupAdmin() which reads this field.
+//   Note: each isGroupAdmin() call costs one Firestore document read.
+//   This is acceptable for SHG group sizes (<50 members, low write frequency).
+//
+// Membership identification:
+//   Approved membership is indexed at /groups/{groupId}/memberUids/{uid}.
+//   The `exists()` call is O(1) and avoids query operations (not supported
+//   in security rules). A memberUid entry is created on approval and deleted
+//   on exit — it always reflects current approved status.
+//
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ──────────────────────────────────────────────────────────────────────
+    // Helper functions
+    // ──────────────────────────────────────────────────────────────────────
+
+    /// Returns true when the request is from a Firebase Auth-authenticated user.
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /// Returns true when the authenticated user is the admin of the given group.
+    ///
+    /// Reads the group document to retrieve adminUid. Every call to this
+    /// function costs one Firestore read billed against the project quota.
+    /// Minimize its use in high-frequency read paths.
+    function isGroupAdmin(groupId) {
+      return isSignedIn()
+          && get(/databases/$(database)/documents/groups/$(groupId))
+               .data.adminUid == request.auth.uid;
+    }
+
+    /// Returns true when the authenticated user is an approved member of
+    /// the given group.
+    ///
+    /// Uses an existence check on the memberUids index subcollection.
+    /// The check is O(1) and does not require a query.
+    function isApprovedMember(groupId) {
+      return isSignedIn()
+          && exists(
+               /databases/$(database)/documents/groups/$(groupId)
+               /memberUids/$(request.auth.uid)
+             );
+    }
+
+    /// Returns true when the user is either the admin or an approved member.
+    /// Used to gate access to group-level data.
+    function isAdminOrMember(groupId) {
+      return isGroupAdmin(groupId) || isApprovedMember(groupId);
+    }
+
+    /// Returns true when the caller is verified Ozey internal staff.
+    ///
+    /// `ozeyStaff` is a Firebase Auth custom claim. Custom claims can only be
+    /// set through the Admin SDK (never by a client), and are read from the
+    /// signed ID token — so this check costs no Firestore read and cannot be
+    /// spoofed. Grants READ-ONLY access for the Ozey Console. It is never
+    /// consulted by any write rule.
+    function isOzeyStaff() {
+      return isSignedIn() && request.auth.token.ozeyStaff == true;
+    }
+
+    /// Returns true when the authenticated user owns the member document
+    /// [memberId] in [groupId] — i.e. the admin-maintained memberUids index
+    /// maps their uid to this member. This is the canonical, spoof-proof
+    /// ownership proof (the same index behind isApprovedMember); it does not
+    /// trust any mutable field on the member document. Costs one Firestore
+    /// read (billed) — used only on the low-frequency self-edit path.
+    function ownsMember(groupId, memberId) {
+      return isSignedIn()
+          && exists(
+               /databases/$(database)/documents/groups/$(groupId)
+               /memberUids/$(request.auth.uid)
+             )
+          && get(
+               /databases/$(database)/documents/groups/$(groupId)
+               /memberUids/$(request.auth.uid)
+             ).data.memberId == memberId;
+    }
+
+    /// Returns true when [memberId] resolves to a member document in
+    /// [groupId] whose `uid` field equals [uid] and whose `statusIndex` is 0
+    /// (active/approved). Mirrors, at the rules layer, the exact same
+    /// live-read re-verification `MemberRepository.runAdminTransferTransaction`
+    /// performs before writing (ADR-003) — this is not a query, it's a
+    /// direct-path existence + field check, so it works the same way inside
+    /// Security Rules as it does inside the Dart transaction.
+    function isActiveUidMatchedMember(groupId, uid, memberId) {
+      return exists(
+               /databases/$(database)/documents/groups/$(groupId)
+               /members/$(memberId)
+             )
+          && get(
+               /databases/$(database)/documents/groups/$(groupId)
+               /members/$(memberId)
+             ).data.uid == uid
+          && get(
+               /databases/$(database)/documents/groups/$(groupId)
+               /members/$(memberId)
+             ).data.statusIndex == 0;
+    }
+
+    /// Returns true when [uid] is an eligible admin-transfer target in
+    /// [groupId] — i.e. its `memberUids` index entry exists AND resolves
+    /// (via the entry's own `memberId` field) to a real member document
+    /// whose `uid` matches and whose `statusIndex` is active. Deliberately
+    /// does NOT stop at `exists(memberUids/{uid})` alone: a fake/orphan
+    /// memberUids entry (pointing at a memberId that doesn't exist, or that
+    /// belongs to a different uid, or that is no longer active) must not be
+    /// treated as eligible just because the index document happens to be
+    /// present — see docs/architecture/ADR-003.md.
+    function isEligibleAdminTransferTarget(groupId, uid) {
+      return uid is string && uid.size() > 0
+          && exists(
+               /databases/$(database)/documents/groups/$(groupId)
+               /memberUids/$(uid)
+             )
+          && isActiveUidMatchedMember(
+               groupId,
+               uid,
+               get(
+                 /databases/$(database)/documents/groups/$(groupId)
+                 /memberUids/$(uid)
+               ).data.memberId
+             );
+    }
+
+    /// Returns true when a `groups/{groupId}` update changes ONLY `adminUid`
+    /// (and the `updatedAt` tiebreaker), leaving every other group field —
+    /// name, rules, bank details, invite code — byte-for-byte unchanged.
+    /// The admin-transfer-specific branch of the `groups` update rule below;
+    /// prevents an admin-transfer write from smuggling in unrelated field
+    /// changes under cover of the same request.
+    function isAdminUidOnlyChange() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['adminUid', 'updatedAt']);
+    }
+
+    /// Returns true when a member-document update changes ONLY the display
+    /// name (and the last-write-wins `updatedAt` tiebreaker), with a valid
+    /// name, and leaves every authority / identity field byte-for-byte
+    /// unchanged. This is the field-restriction that lets a member edit their
+    /// own name without being able to alter role, admin authority, status,
+    /// uid, or phone.
+    function onlyNameChanged() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['name', 'updatedAt'])
+          && request.resource.data.name is string
+          && request.resource.data.name.size() >= 1
+          && request.resource.data.name.size() <= 60
+          && request.resource.data.roleIndex      == resource.data.roleIndex
+          && request.resource.data.statusIndex    == resource.data.statusIndex
+          && request.resource.data.hasAdminAccess == resource.data.hasAdminAccess
+          && request.resource.data.uid            == resource.data.uid
+          && request.resource.data.phone          == resource.data.phone;
+    }
+
+    // ──────────────────────────────────────────────────────────────────────
+    // Financial-write field validation (Rules field-level hardening)
+    //
+    // Applies ONLY to the Cloud Sync Phase 1 financial backup collections
+    // below (savings/loans/repayments/meetings/monthlyClosures/
+    // openingBalance/openingRepayments). Authorization is UNCHANGED — every
+    // write is still gated on isGroupAdmin(groupId) exactly as before. These
+    // functions add a second, independent gate: the WRITTEN SHAPE must match
+    // the app's actual DTO contract (lib/core/sync/models/*_dto.dart) — no
+    // extra fields, no missing declared fields, correct types, and (on
+    // update) the record's own identity cannot be reassigned to a different
+    // value. Deliberately does NOT constrain amount sign — negative amounts
+    // are the app's own append-only reversal convention (see `amount` on
+    // SavingEntryDto/RepaymentDto) and must remain permitted.
+    //
+    // Every sync DTO's toMap() always emits every declared key (nullable
+    // fields as an explicit `null` value, never omitted) on EVERY write —
+    // SyncRepository.upsert always `set(merge:true)`s the record's full
+    // current state, never a partial patch — so a legitimate write always
+    // has exactly this key set, and "what may change on update" is
+    // expressed as "what must NOT change", not as a diff allowlist.
+    // ──────────────────────────────────────────────────────────────────────
+
+    /// True when [v] is absent (null) or a Firestore timestamp — the shape
+    /// every optional DateTime? sync field takes (e.g. MonthlyClosure.closedAt).
+    function isTimestampOrNull(v) {
+      return v == null || v is timestamp;
+    }
+
+    /// True when [v] is absent (null) or a string — the shape every optional
+    /// String? sync field takes (SavingEntry.notes, Loan.purpose, etc.).
+    function isStringOrNull(v) {
+      return v == null || v is string;
+    }
+
+    /// True when [d]'s keys are exactly [allowedKeys] — no more, no fewer.
+    function hasExactKeys(d, allowedKeys) {
+      return d.keys().hasOnly(allowedKeys) && d.keys().hasAll(allowedKeys);
+    }
+
+    /// SavingEntryDto — /groups/{groupId}/savings/{savingId}.
+    function isValidSavingsWrite(d, docId) {
+      return hasExactKeys(d, [
+               'id', 'memberId', 'memberName', 'amount', 'date', 'period',
+               'notes', 'recordedBy', 'reversalOf', 'createdAt', 'updatedAt',
+               'schemaVersion',
+             ])
+          && d.id == docId
+          && d.memberId is string && d.memberId.size() > 0
+          && d.memberName is string
+          && d.amount is number
+          && d.date is timestamp
+          && d.period is string && d.period.size() > 0
+          && isStringOrNull(d.notes)
+          && isStringOrNull(d.recordedBy)
+          && isStringOrNull(d.reversalOf)
+          && d.createdAt is timestamp
+          && d.updatedAt is timestamp
+          && d.schemaVersion == 1;
+    }
+
+    /// A savings entry is create-once in every legitimate write path — a
+    /// reversal is always its own new document (see SavingsNotifier.reverse),
+    /// never an edit of the original. Locks down only the fields with direct
+    /// code evidence they never change post-creation: which member it
+    /// belongs to, and when it was created.
+    function savingsIdentityUnchanged(existing, incoming) {
+      return incoming.memberId  == existing.memberId
+          && incoming.createdAt == existing.createdAt;
+    }
+
+    /// LoanDto — /groups/{groupId}/loans/{loanId}.
+    function isValidLoansWrite(d, docId) {
+      return hasExactKeys(d, [
+               'id', 'memberId', 'memberName', 'principal', 'interestRate',
+               'amountRepaid', 'disbursedAt', 'dueDate', 'statusIndex',
+               'purpose', 'createdAt', 'updatedAt', 'schemaVersion',
+             ])
+          && d.id == docId
+          && d.memberId is string && d.memberId.size() > 0
+          && d.memberName is string
+          && d.principal is number
+          && d.interestRate is number
+          && d.amountRepaid is number
+          && d.disbursedAt is timestamp
+          && d.dueDate is timestamp
+          && d.statusIndex is int && d.statusIndex >= 0 && d.statusIndex <= 3
+          && isStringOrNull(d.purpose)
+          && d.createdAt is timestamp
+          && d.updatedAt is timestamp
+          && d.schemaVersion == 1;
+    }
+
+    /// A loan's own identity — which member it belongs to, its principal,
+    /// rate, and dates — never changes after disbursement; only
+    /// amountRepaid/statusIndex move as repayments post (direct code
+    /// evidence: LoansNotifier never reassigns any other field on an
+    /// existing Loan).
+    function loansIdentityUnchanged(existing, incoming) {
+      return incoming.memberId     == existing.memberId
+          && incoming.memberName   == existing.memberName
+          && incoming.principal    == existing.principal
+          && incoming.interestRate == existing.interestRate
+          && incoming.disbursedAt  == existing.disbursedAt
+          && incoming.dueDate      == existing.dueDate
+          && incoming.createdAt    == existing.createdAt;
+    }
+
+    /// RepaymentDto — /groups/{groupId}/repayments/{repaymentId}.
+    function isValidRepaymentsWrite(d, docId) {
+      return hasExactKeys(d, [
+               'id', 'loanId', 'memberId', 'memberName', 'amount', 'date',
+               'notes', 'reversalOf', 'createdAt', 'updatedAt', 'schemaVersion',
+             ])
+          && d.id == docId
+          && d.loanId is string && d.loanId.size() > 0
+          && d.memberId is string && d.memberId.size() > 0
+          && d.memberName is string
+          && d.amount is number
+          && d.date is timestamp
+          && isStringOrNull(d.notes)
+          && isStringOrNull(d.reversalOf)
+          && d.createdAt is timestamp
+          && d.updatedAt is timestamp
+          && d.schemaVersion == 1;
+    }
+
+    /// A repayment is create-once in every legitimate write path — a
+    /// reversal is always its own new document (see
+    /// LoansNotifier.reverseRepayment), never an edit of the original.
+    function repaymentsIdentityUnchanged(existing, incoming) {
+      return incoming.loanId    == existing.loanId
+          && incoming.memberId  == existing.memberId
+          && incoming.createdAt == existing.createdAt;
+    }
+
+    /// MeetingDto — /groups/{groupId}/meetings/{meetingId}.
+    function isValidMeetingsWrite(d, docId) {
+      return hasExactKeys(d, [
+               'id', 'date', 'period', 'attendeeIds', 'totalMembers',
+               'savingsCollected', 'loansDisbursed', 'loansRepaid',
+               'extraIncome', 'moneySpent', 'extraIncomeDesc',
+               'moneySpentDesc', 'createdAt', 'updatedAt', 'schemaVersion',
+             ])
+          && d.id == docId
+          && d.date is timestamp
+          && d.period is string && d.period.size() > 0
+          && d.attendeeIds is list
+          && d.totalMembers is int && d.totalMembers >= 0
+          && d.savingsCollected is number
+          && d.loansDisbursed is number
+          && d.loansRepaid is number
+          && d.extraIncome is number
+          && d.moneySpent is number
+          && isStringOrNull(d.extraIncomeDesc)
+          && isStringOrNull(d.moneySpentDesc)
+          && d.createdAt is timestamp
+          && d.updatedAt is timestamp
+          && d.schemaVersion == 1;
+    }
+
+    /// A meeting has no legitimate update path through Cloud Sync at all
+    /// (MeetingsNotifier.add is the only call site that reaches Firestore) —
+    /// locks down only id/createdAt, the floor every collection here shares,
+    /// rather than presuming the rest is permanently fixed without a second
+    /// write path to confirm it against.
+    function meetingsIdentityUnchanged(existing, incoming) {
+      return incoming.createdAt == existing.createdAt;
+    }
+
+    /// MonthlyClosureDto — /groups/{groupId}/monthlyClosures/{closureId}.
+    function isValidClosuresWrite(d, docId) {
+      return hasExactKeys(d, [
+               'id', 'period', 'statusIndex', 'closingBalance',
+               'totalSavings', 'totalLoanRepayments', 'totalInterest',
+               'totalExpenses', 'totalOtherIncome', 'closedAt', 'closedBy',
+               'reopenedAt', 'reopenedBy', 'notes', 'createdAt', 'updatedAt',
+               'schemaVersion',
+             ])
+          && d.id == docId
+          && d.period is string && d.period.size() > 0
+          && d.statusIndex is int && d.statusIndex >= 0 && d.statusIndex <= 2
+          && d.closingBalance is number
+          && d.totalSavings is number
+          && d.totalLoanRepayments is number
+          && d.totalInterest is number
+          && d.totalExpenses is number
+          && d.totalOtherIncome is number
+          && isTimestampOrNull(d.closedAt)
+          && isStringOrNull(d.closedBy)
+          && isTimestampOrNull(d.reopenedAt)
+          && isStringOrNull(d.reopenedBy)
+          && isStringOrNull(d.notes)
+          && d.createdAt is timestamp
+          && d.updatedAt is timestamp
+          && d.schemaVersion == 1;
+    }
+
+    /// A closure record's period never changes across its close/reopen
+    /// lifecycle (direct code evidence: MonthlyClosureNotifier always
+    /// resolves the existing record for a period before mutating it, never
+    /// changes which period it snapshots).
+    function closuresIdentityUnchanged(existing, incoming) {
+      return incoming.period    == existing.period
+          && incoming.createdAt == existing.createdAt;
+    }
+
+    /// OpeningBalanceDto — /groups/{groupId}/openingBalance/current. A
+    /// single fixed document per group (docId is always the constant
+    /// "current" — enforced structurally by the collection path, not a
+    /// field). Has no id/memberId of its own to protect, so — unlike the
+    /// per-record collections above — there is no identity-unchanged
+    /// companion function; the whole document IS the setup snapshot, and
+    /// the "Existing Group Savings" wizard is allowed to re-run and replace
+    /// it in full.
+    function isValidOpeningBalanceWrite(d) {
+      return hasExactKeys(d, [
+               'totalSavings', 'outstandingLoans', 'totalInterestCollected',
+               'otherIncome', 'otherExpense', 'totalLoansGiven',
+               'totalLateFeesCollected', 'memberSavings', 'memberLoanTaken',
+               'memberLoanBalance', 'memberLateFeesDue', 'memberLateFeesPaid',
+               'memberInterestPaid', 'updatedAt', 'schemaVersion',
+             ])
+          && d.totalSavings is number
+          && d.outstandingLoans is number
+          && d.totalInterestCollected is number
+          && d.otherIncome is number
+          && d.otherExpense is number
+          && d.totalLoansGiven is number
+          && d.totalLateFeesCollected is number
+          && d.memberSavings is map
+          && d.memberLoanTaken is map
+          && d.memberLoanBalance is map
+          && d.memberLateFeesDue is map
+          && d.memberLateFeesPaid is map
+          && d.memberInterestPaid is map
+          && d.updatedAt is timestamp
+          && d.schemaVersion == 1;
+    }
+
+    /// OpeningRepaymentDto — /groups/{groupId}/openingRepayments/{id}.
+    function isValidOpeningRepaymentsWrite(d, docId) {
+      return hasExactKeys(d, [
+               'id', 'memberId', 'kind', 'amount', 'period', 'date',
+               'schemaVersion',
+             ])
+          && d.id == docId
+          && d.memberId is string && d.memberId.size() > 0
+          && d.kind in ['loan', 'lateFee']
+          && d.amount is number
+          && d.period is string && d.period.size() > 0
+          && d.date is timestamp
+          && d.schemaVersion == 1;
+    }
+
+    /// An opening-repayment entry is create-once in every legitimate write
+    /// path (OpeningRepaymentDraft.record always mints a fresh id;
+    /// .reverse() deletes the LOCAL entry — there is no Firestore delete —
+    /// rather than editing an existing synced document).
+    function openingRepaymentsIdentityUnchanged(existing, incoming) {
+      return incoming.memberId == existing.memberId;
+    }
+
+    // ──────────────────────────────────────────────────────────────────────
+    // /inviteCodes/{inviteCode}
+    //
+    // Lookup table mapping human-readable invite codes to Firestore group IDs.
+    //
+    // Read:   Any authenticated user may read an invite code document.
+    //         The code itself acts as an access token — it is physically
+    //         shared by the group President and has a large code space
+    //         (36^6 ≈ 2.2 billion combinations). Anyone who has the code
+    //         can look up the group ID to submit a join request.
+    //
+    // Create: Only the group admin may register an invite code. Because the
+    //         group may not exist yet when the code is first registered (the
+    //         admin writes both atomically), we cannot use isGroupAdmin()
+    //         here. Instead we verify the creator is signed in and defer
+    //         the admin check to the /groups/{groupId} create rule.
+    //         Note: this means any authenticated user can technically call
+    //         this endpoint. In practice, the joinRequests flow will fail
+    //         if the referenced groupId does not have the caller as admin —
+    //         the damage surface is a stale lookup entry, not data access.
+    //
+    // Update: Only the admin of the referenced group may deactivate a code.
+    //
+    // Delete: Only the admin of the referenced group may remove a code.
+    // ──────────────────────────────────────────────────────────────────────
+
+    match /inviteCodes/{inviteCode} {
+      allow read:   if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isGroupAdmin(resource.data.groupId);
+      allow delete: if isGroupAdmin(resource.data.groupId);
+    }
+
+    // ──────────────────────────────────────────────────────────────────────
+    // /groups/{groupId}
+    //
+    // Group metadata document. Contains configuration, invite code, and
+    // admin identity (adminUid).
+    //
+    // Read:   Only admin and approved members. Prevents an attacker who
+    //         guesses or obtains a groupId from reading any group data
+    //         without being a member.
+    //
+    // Create: Any authenticated user may create a group, provided:
+    //           - adminUid == request.auth.uid (cannot impersonate another
+    //             user as admin).
+    //           - groupId field matches the document ID (data integrity).
+    //
+    // Update: Only the current admin. Two shapes are permitted:
+    //           - group settings changes (name, rules, bank details, invite
+    //             code, etc.) — adminUid is left byte-for-byte unchanged.
+    //           - admin transfer (ADR-003) — ONLY adminUid (+ updatedAt)
+    //             changes, and the new value must be an eligible target:
+    //             a real, uid-matched, currently active member of THIS
+    //             group (isEligibleAdminTransferTarget). Deliberately
+    //             narrower than a blanket "admin may write anything": it
+    //             prevents the current admin from reassigning authority to
+    //             a non-member/fake uid, rejects cross-group and stale/
+    //             orphaned targets, and prevents an admin-transfer write
+    //             from also smuggling in unrelated group-field changes.
+    //             This is the server-side enforcement of the exact same
+    //             contract MemberRepository.runAdminTransferTransaction
+    //             already re-verifies client-side (ADR-003) — role
+    //             (President/Secretary/Member) and the cosmetic
+    //             Member.hasAdminAccess badge are never consulted here;
+    //             `adminUid` is the sole authority source.
+    //
+    // Delete: Only the current admin.
+    // ──────────────────────────────────────────────────────────────────────
+
+    match /groups/{groupId} {
+      allow read:   if isOzeyStaff() || isAdminOrMember(groupId);
+      allow create: if isSignedIn()
+                    && request.resource.data.adminUid == request.auth.uid
+                    && request.resource.data.groupId  == groupId;
+      allow update: if isGroupAdmin(groupId)
+                    && (
+                         request.resource.data.adminUid == resource.data.adminUid
+                         || (
+                              isAdminUidOnlyChange()
+                              && isEligibleAdminTransferTarget(
+                                   groupId, request.resource.data.adminUid)
+                            )
+                       );
+      allow delete: if isGroupAdmin(groupId);
+
+      // ────────────────────────────────────────────────────────────────────
+      // /groups/{groupId}/memberUids/{uid}
+      //
+      // Membership index. One document per approved member, keyed by
+      // Firebase Auth UID. Used exclusively by Security Rules to check
+      // group membership without a query.
+      //
+      // Read:   Admin reads all. A member may read their own entry (e.g.
+      //         to verify they are still approved after a membership change).
+      //
+      // Create: Admin only. Written atomically with the member document
+      //         during approval (via Transaction or WriteBatch).
+      //
+      // Update: Admin only. (e.g. role change after promotion).
+      //
+      // Delete: Admin only. Written when a member leaves or is removed.
+      // ────────────────────────────────────────────────────────────────────
+
+      match /memberUids/{uid} {
+        allow read:   if isGroupAdmin(groupId)
+                      || (isSignedIn() && request.auth.uid == uid);
+        allow create: if isGroupAdmin(groupId);
+        allow update: if isGroupAdmin(groupId);
+        allow delete: if isGroupAdmin(groupId);
+      }
+
+      // ────────────────────────────────────────────────────────────────────
+      // /groups/{groupId}/members/{memberId}
+      //
+      // Approved members. Contains ONLY members with statusIndex == 0
+      // (active). Pending requests live in joinRequests, not here.
+      //
+      // Read:   Admin OR any approved member may read the full roster
+      //         (Phase 1 roster sync). Every signed-in device in the group
+      //         subscribes to this collection so the President, Secretary,
+      //         and Members render identically everywhere. Approved
+      //         membership is proven O(1) via the memberUids index
+      //         (isApprovedMember); the admin is covered by isGroupAdmin.
+      //         Pending/declined users are not in memberUids and have no
+      //         read access. The roster is non-sensitive within a group
+      //         (names, roles, savings totals) and already visible in-app.
+      //
+      // Create: Admin only. Members are created on approval — never by the
+      //         joining user directly. The statusIndex must be 0 (active).
+      //         This prevents a member from bypassing the approval flow.
+      //
+      // Update: Admin — any field (role changes, admin transfer, deactivation).
+      //         OR the OWNING member — restricted to their own display `name`
+      //         only (onlyNameChanged), proven via the memberUids index
+      //         (ownsMember). A member can never change their own role,
+      //         status, admin flag, uid, or phone.
+      //
+      // Delete: Admin only.
+      // ────────────────────────────────────────────────────────────────────
+
+      match /members/{memberId} {
+        allow read:   if isOzeyStaff() || isAdminOrMember(groupId);
+        allow create: if isGroupAdmin(groupId)
+                      && request.resource.data.statusIndex == 0;
+        allow update: if isGroupAdmin(groupId)
+                      || (ownsMember(groupId, memberId) && onlyNameChanged());
+        allow delete: if isGroupAdmin(groupId);
+      }
+
+      // ────────────────────────────────────────────────────────────────────
+      // /groups/{groupId}/joinRequests/{requestId}
+      //
+      // Pending join requests submitted by prospective members.
+      // Separated from the members collection so approved members are
+      // never mixed with pending requests.
+      //
+      // Read:   Admin reads all. The requester reads their own document
+      //         (identified by the `uid` field) to detect approval or
+      //         decline without needing access to the full members list.
+      //
+      // Create: Any authenticated user may create a join request, provided:
+      //           - uid field == request.auth.uid (cannot impersonate another
+      //             user's join request).
+      //           - status == "pending" (cannot self-approve or self-decline).
+      //         No membership in the group is required to create a request —
+      //         this is the entry point for new members.
+      //
+      // Update: Admin only. The admin updates status to "approved" or
+      //         "declined" via a Firestore Transaction (which also creates
+      //         the member document and memberUid entry atomically).
+      //         Requesters cannot update their own request after submission.
+      //
+      // Delete: Admin only. (e.g. cleanup of old requests).
+      // ────────────────────────────────────────────────────────────────────
+
+      match /joinRequests/{requestId} {
+        allow read:   if isGroupAdmin(groupId)
+                      || (isSignedIn() && resource.data.uid == request.auth.uid);
+        allow create: if isSignedIn()
+                      && request.resource.data.uid    == request.auth.uid
+                      && request.resource.data.status == "pending";
+        allow update: if isGroupAdmin(groupId);
+        allow delete: if isGroupAdmin(groupId);
+      }
+
+      // ────────────────────────────────────────────────────────────────────
+      // Cloud Sync Phase 1 — financial backup subcollections
+      //
+      //   /groups/{groupId}/savings/{savingId}
+      //   /groups/{groupId}/loans/{loanId}
+      //   /groups/{groupId}/repayments/{repaymentId}
+      //   /groups/{groupId}/meetings/{meetingId}
+      //   /groups/{groupId}/monthlyClosures/{closureId}
+      //
+      // Read:   admin OR any approved member (group-scoped; never public).
+      // Write:  create/update by the group admin ONLY — members never write
+      //         financial records (mirrors the in-app permission model where
+      //         only the admin records payments / loans / meetings / closures).
+      // Delete: NOT allowed — Phase 1 is non-destructive (reversals are
+      //         append-only negative entries; closures are updated in place).
+      //         Falls through to the deny-all fallback.
+      // ────────────────────────────────────────────────────────────────────
+
+      match /savings/{savingId} {
+        allow read:   if isOzeyStaff() || isAdminOrMember(groupId);
+        allow create: if isGroupAdmin(groupId)
+                      && isValidSavingsWrite(request.resource.data, savingId);
+        allow update: if isGroupAdmin(groupId)
+                      && isValidSavingsWrite(request.resource.data, savingId)
+                      && savingsIdentityUnchanged(resource.data, request.resource.data);
+      }
+
+      match /loans/{loanId} {
+        allow read:   if isOzeyStaff() || isAdminOrMember(groupId);
+        allow create: if isGroupAdmin(groupId)
+                      && isValidLoansWrite(request.resource.data, loanId);
+        allow update: if isGroupAdmin(groupId)
+                      && isValidLoansWrite(request.resource.data, loanId)
+                      && loansIdentityUnchanged(resource.data, request.resource.data);
+      }
+
+      match /repayments/{repaymentId} {
+        allow read:   if isOzeyStaff() || isAdminOrMember(groupId);
+        allow create: if isGroupAdmin(groupId)
+                      && isValidRepaymentsWrite(request.resource.data, repaymentId);
+        allow update: if isGroupAdmin(groupId)
+                      && isValidRepaymentsWrite(request.resource.data, repaymentId)
+                      && repaymentsIdentityUnchanged(resource.data, request.resource.data);
+      }
+
+      match /meetings/{meetingId} {
+        allow read:   if isOzeyStaff() || isAdminOrMember(groupId);
+        allow create: if isGroupAdmin(groupId)
+                      && isValidMeetingsWrite(request.resource.data, meetingId);
+        allow update: if isGroupAdmin(groupId)
+                      && isValidMeetingsWrite(request.resource.data, meetingId)
+                      && meetingsIdentityUnchanged(resource.data, request.resource.data);
+      }
+
+      match /monthlyClosures/{closureId} {
+        allow read:   if isOzeyStaff() || isAdminOrMember(groupId);
+        allow create: if isGroupAdmin(groupId)
+                      && isValidClosuresWrite(request.resource.data, closureId);
+        allow update: if isGroupAdmin(groupId)
+                      && isValidClosuresWrite(request.resource.data, closureId)
+                      && closuresIdentityUnchanged(resource.data, request.resource.data);
+      }
+
+      // ────────────────────────────────────────────────────────────────────
+      // Existing Group Savings (opening balance) backup — single document
+      //
+      //   /groups/{groupId}/openingBalance/current
+      //
+      // Same read/write shape as the financial subcollections above: the
+      // Existing Group Savings setup wizard is admin-only, so its backup
+      // follows the identical permission model. Exactly one document ever
+      // exists under this subcollection (id "current") — not a growing list.
+      // ────────────────────────────────────────────────────────────────────
+
+      match /openingBalance/{docId} {
+        allow read:           if isOzeyStaff() || isAdminOrMember(groupId);
+        allow create, update: if isGroupAdmin(groupId)
+                              && isValidOpeningBalanceWrite(request.resource.data);
+      }
+
+      // ────────────────────────────────────────────────────────────────────
+      // Opening-repayments log — one document per collection made against
+      // an opening (pre-existing) receivable
+      //
+      //   /groups/{groupId}/openingRepayments/{id}
+      //
+      // Same read/write shape as the financial subcollections above: the
+      // collection is recorded from the same admin-only Record Payment
+      // flow that writes savings/loans/repayments. Growing, per-entry log
+      // (like those siblings) — not a single aggregate document.
+      // ────────────────────────────────────────────────────────────────────
+
+      match /openingRepayments/{id} {
+        allow read:   if isOzeyStaff() || isAdminOrMember(groupId);
+        allow create: if isGroupAdmin(groupId)
+                      && isValidOpeningRepaymentsWrite(request.resource.data, id);
+        allow update: if isGroupAdmin(groupId)
+                      && isValidOpeningRepaymentsWrite(request.resource.data, id)
+                      && openingRepaymentsIdentityUnchanged(resource.data, request.resource.data);
+      }
+    }
+
+    // ──────────────────────────────────────────────────────────────────────
+    // Ozey Console — collection-group READ access for Ozey staff
+    //
+    // Lets verified staff (isOzeyStaff custom claim) run cross-group queries
+    // such as "latest savings across all groups". Read-only: there is no
+    // write rule here, so writes still fall through to the per-group rules
+    // above (and to the deny-all fallback for anything else).
+    // ──────────────────────────────────────────────────────────────────────
+
+    match /{path=**}/members/{memberId}          { allow read: if isOzeyStaff(); }
+    match /{path=**}/savings/{savingId}          { allow read: if isOzeyStaff(); }
+    match /{path=**}/loans/{loanId}              { allow read: if isOzeyStaff(); }
+    match /{path=**}/repayments/{repaymentId}    { allow read: if isOzeyStaff(); }
+    match /{path=**}/meetings/{meetingId}        { allow read: if isOzeyStaff(); }
+    match /{path=**}/openingRepayments/{id}      { allow read: if isOzeyStaff(); }
+    match /{path=**}/openingBalance/{docId}      { allow read: if isOzeyStaff(); }
+
+    // ──────────────────────────────────────────────────────────────────────
+    // /system/config
+    //
+    // App-wide configuration managed by the development team.
+    // Contains minimumSupportedAppVersion and global schema information.
+    //
+    // Read:   Any authenticated user. The app reads this at startup to
+    //         enforce minimum version requirements.
+    //
+    // Write:  No client may write this document. It is managed via the
+    //         Firebase Console or Admin SDK only.
+    // ──────────────────────────────────────────────────────────────────────
+
+    match /system/config {
+      allow read:  if isSignedIn();
+      allow write: if false;
+    }
+
+    // ──────────────────────────────────────────────────────────────────────
+    // /users/{uid}
+    //
+    // Phase 1 — Firebase User Registry. One document per Firebase Auth
+    // account, keyed by the account's own UID. Mirrors login identity for
+    // admin visibility (phone, name, role, group/member ids, timestamps,
+    // appVersion). Written by UserRegistry.recordLogin() on every login.
+    //
+    // Read:   A signed-in user may read ONLY their own document.
+    // Create/
+    // Update: A signed-in user may create/update ONLY their own document
+    //         (request.auth.uid == uid) — no cross-user writes.
+    // Delete: Not allowed (falls through to the deny-all fallback).
+    //
+    // Admin read-all is DEFERRED: the only admin pattern here (isGroupAdmin)
+    // is group-scoped, and a global-admin pattern does not exist yet; it is
+    // not required for Phase 1. The stored `role` field is visibility metadata
+    // ONLY — these rules never consult it for authority.
+    // ──────────────────────────────────────────────────────────────────────
+
+    match /users/{uid} {
+      allow read:           if isSignedIn() && request.auth.uid == uid;
+      allow create, update: if isSignedIn() && request.auth.uid == uid;
+    }
+
+    // ──────────────────────────────────────────────────────────────────────
+    // Deny-all fallback
+    //
+    // Any path not matched above is denied. This is Firestore's default
+    // behaviour but made explicit here for auditability.
+    // ──────────────────────────────────────────────────────────────────────
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

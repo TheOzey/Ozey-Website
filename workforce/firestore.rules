@@ -1,0 +1,17 @@
+rules_version = '2';
+
+// Ozey Workforce — Firestore Security Rules
+//
+// Every collection here (employees, roles, products, auditLog) is SERVER-ONLY.
+// It is read and written exclusively by the console server and the auth
+// blocking functions through the Admin SDK, which does not use these rules.
+// No browser, including a signed-in employee, can read or write anything.
+// See sites/console/OZEY_WORKFORCE_ARCHITECTURE.md §3.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

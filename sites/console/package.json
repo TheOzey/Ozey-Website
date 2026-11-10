@@ -1,0 +1,47 @@
+{
+  "name": "@ozey/console",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --port 3100",
+    "build": "next build",
+    "start": "next start --port 3100",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "grant-staff": "node scripts/grant-staff-claim.mjs",
+    "test:rules": "firebase emulators:exec --config firebase/emulator.firebase.json --only firestore --project demo-ozey-console \"node --test --test-concurrency=1 firebase/staff-access.rules.test.mjs\"",
+    "emulators": "firebase emulators:start --config firebase/emulator.firebase.json --only auth,firestore --project demo-ozey-shg",
+    "test:unit": "node --test \"tests/unit/*.test.ts\"",
+    "test:integration": "bash tests/integration/run.sh",
+    "verify:shg-reader": "node scripts/verify-shg-reader.mjs",
+    "reconcile:shg": "node scripts/shg-reconcile.ts"
+  },
+  "dependencies": {
+    "@google-cloud/firestore": "7.11.6",
+    "@heroui/react": "^3.2.6",
+    "@heroui/styles": "^3.2.6",
+    "@internationalized/date": "^3.12.4",
+    "@tanstack/react-query": "^5.104.0",
+    "firebase": "^12.19.0",
+    "firebase-admin": "^13.10.0",
+    "google-auth-library": "^9.15.1",
+    "lucide-react": "0.487.0",
+    "next": "^16.3.7",
+    "react": "^19.3.0",
+    "react-aria-components": "^1.21.1",
+    "react-dom": "^19.3.0",
+    "server-only": "^0.0.1"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.2",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^22.20.4",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.3.7",
+    "tailwindcss": "^4.1.12",
+    "typescript": "~5.9.3"
+  }
+}
