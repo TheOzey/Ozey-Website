@@ -16,6 +16,8 @@ import imgMeetings from "@/imports/meetings.png";
 import imgReports from "@/imports/reports.png";
 import PrivacyPolicyPage from "./pages/PrivacyPolicy";
 
+const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.ozey.shg";
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type ChapterId = "members" | "savings" | "meetings" | "loans" | "ledger" | "reports";
@@ -285,7 +287,7 @@ function Navbar({ nav }: { nav: Nav }) {
               <Globe size={15} className="text-[#00a697]" />
               English
             </button>
-            <a href="#download" onClick={anchor("#download")} className="flex items-center gap-2 bg-white border border-[#94a3b8] rounded-full px-5 py-2 text-sm font-medium text-[#1e293b] hover:border-[#1e293b] hover:shadow-sm transition-all">
+            <a href={PLAY_STORE_URL} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-white border border-[#94a3b8] rounded-full px-5 py-2 text-sm font-medium text-[#1e293b] hover:border-[#1e293b] hover:shadow-sm transition-all">
               <img src={imgPlayStore} alt="" className="w-4 object-contain" style={{ height: 18 }} />
               Download
             </a>
@@ -302,7 +304,7 @@ function Navbar({ nav }: { nav: Nav }) {
           {links.map((l) => (
             <a key={l.href} href={l.href} className="text-base font-medium text-[#1e293b]" onClick={(e) => { setMenuOpen(false); anchor(l.href)(e); }}>{l.label}</a>
           ))}
-          <a href="#download" className="flex items-center gap-2 bg-white border border-[#94a3b8] rounded-full px-5 py-2.5 text-sm font-medium text-[#1e293b] w-fit" onClick={(e) => { setMenuOpen(false); anchor("#download")(e); }}>
+          <a href={PLAY_STORE_URL} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-white border border-[#94a3b8] rounded-full px-5 py-2.5 text-sm font-medium text-[#1e293b] w-fit" onClick={() => setMenuOpen(false)}>
             <img src={imgPlayStore} alt="" className="w-4 object-contain" style={{ height: 18 }} />
             Download
           </a>
@@ -498,6 +500,44 @@ function PhoneAnnotation({
  * filter to survive the dark button, which destroyed the mark. This scales
  * cleanly and keeps the brand colours on any background.
  */
+function SocialIcon({ size = 22, children }: { size?: number; children: React.ReactNode }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor">
+      {children}
+    </svg>
+  );
+}
+
+const SOCIAL_LINKS = [
+  {
+    label: "WhatsApp",
+    href: "https://whatsapp.com/channel/0029Vb9QgZQL7UVMFVPr4U0C",
+    icon: (
+      <SocialIcon>
+        <path d="M12.04 2C6.58 2 2.15 6.4 2.15 11.83c0 1.74.46 3.44 1.34 4.94L2 22l5.39-1.41a10 10 0 0 0 4.65 1.18h.01c5.46 0 9.89-4.4 9.89-9.83C21.94 6.4 17.5 2 12.04 2zm5.76 13.92c-.24.68-1.4 1.3-1.94 1.38-.5.07-1.12.1-1.81-.11-.42-.13-.95-.31-1.64-.6-2.88-1.24-4.76-4.14-4.9-4.33-.14-.19-1.15-1.53-1.15-2.92 0-1.39.73-2.07.99-2.35.26-.28.57-.35.76-.35h.55c.17 0 .41-.07.64.49.24.58.81 2 .88 2.15.07.14.12.32.02.51-.09.19-.14.31-.28.48-.14.17-.29.37-.42.5-.14.14-.28.28-.12.55.16.26.7 1.16 1.51 1.88 1.04.92 1.91 1.21 2.18 1.35.26.14.42.12.58-.07.16-.19.66-.77.84-1.03.17-.26.35-.22.58-.13.24.09 1.5.71 1.76.84.26.13.43.19.49.3.07.1.07.61-.17 1.29z" />
+      </SocialIcon>
+    ),
+  },
+  {
+    label: "YouTube",
+    href: "https://www.youtube.com/@OzeySHG",
+    icon: (
+      <SocialIcon>
+        <path d="M23 12.2s0-3.2-.4-4.6c-.22-.86-.9-1.54-1.76-1.76C19.24 5.4 12 5.4 12 5.4s-7.24 0-8.84.44c-.86.22-1.54.9-1.76 1.76C1 9 1 12.2 1 12.2s0 3.2.4 4.6c.22.86.9 1.54 1.76 1.76 1.6.44 8.84.44 8.84.44s7.24 0 8.84-.44c.86-.22 1.54-.9 1.76-1.76.4-1.4.4-4.6.4-4.6zM9.75 15.52V8.88l6.08 3.32-6.08 3.32z" />
+      </SocialIcon>
+    ),
+  },
+  {
+    label: "Google Play",
+    href: PLAY_STORE_URL,
+    icon: (
+      <SocialIcon>
+        <path d="M3.06 3.27A1.5 1.5 0 0 0 2.56 4.4v15.22c0 .46.18.86.5 1.12l.08.08 8.56-8.72v-.2L3.14 3.19l-.08.08zm11.49 11.75-2.85-2.92v-.2l2.85-2.92.07.04 3.38 1.92c.97.55.97 1.44 0 1.99l-3.38 1.92-.07.04z" />
+      </SocialIcon>
+    ),
+  },
+];
+
 function GooglePlayIcon({ size = 20 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -593,7 +633,9 @@ function HeroSection() {
         id="download"
       >
         <a
-          href="#"
+          href={PLAY_STORE_URL}
+          target="_blank"
+          rel="noopener noreferrer"
           className="flex items-center gap-2.5 bg-[#1e293b] text-white rounded-full px-7 py-3.5 text-sm font-semibold hover:bg-[#0f172a] transition-colors shadow-lg shadow-[#1e293b]/20"
         >
           <GooglePlayIcon size={20} />
@@ -1141,7 +1183,7 @@ function CTASection() {
               Free for all SHGs. Works on any Android phone. No training needed. Trusted by thousands of women across India.
             </p>
             <div className="flex flex-wrap justify-center gap-3">
-              <a href="#" className="flex items-center gap-2.5 bg-white text-[#1e293b] rounded-full px-7 py-3.5 text-sm font-semibold hover:bg-[#f8fafc] transition-colors shadow-lg">
+              <a href={PLAY_STORE_URL} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2.5 bg-white text-[#1e293b] rounded-full px-7 py-3.5 text-sm font-semibold hover:bg-[#f8fafc] transition-colors shadow-lg">
                 <img src={imgPlayStore} alt="" className="w-5 object-contain" style={{ height: 22 }} />
                 Download Free on Google Play
               </a>
@@ -1186,6 +1228,20 @@ function Footer({ nav }: { nav: Nav }) {
         </div>
         <div className="text-xs text-[#94a3b8]">© 2025 Ozey. Built for Indian SHGs.</div>
       </div>
+      <nav aria-label="Social" className="mt-8 flex items-center justify-center gap-6">
+        {SOCIAL_LINKS.map(({ label, href, icon }) => (
+          <a
+            key={label}
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={label}
+            className="text-[#64748b] hover:text-[#00a697] transition-colors"
+          >
+            {icon}
+          </a>
+        ))}
+      </nav>
     </footer>
   );
 }
