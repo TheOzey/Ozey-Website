@@ -33,6 +33,22 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicy";
 
 const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.ozey.shg";
 
+/** Logo + wordmark matching the brand lockup: Ozey SHG / Self Help Group Manager. */
+function BrandLockup({ size = "nav" }: { size?: "nav" | "footer" }) {
+  const logoClass = size === "nav" ? "w-11 h-11" : "w-10 h-10";
+  const titleClass = size === "nav" ? "text-[17px] sm:text-lg" : "text-base";
+  const subClass = size === "nav" ? "text-[11px]" : "text-[10px]";
+  return (
+    <>
+      <img src={imgLogo} alt="" className={`${logoClass} shrink-0 rounded-2xl`} />
+      <div className="flex flex-col leading-tight min-w-0">
+        <span className={`${titleClass} font-bold text-[#0f172a] tracking-tight`}>Ozey SHG</span>
+        <span className={`${subClass} text-[#64748b] font-medium`}>Self Help Group Manager</span>
+      </div>
+    </>
+  );
+}
+
 /** Phosphor duotone with a distinct secondary fill — keeps the emoji colour cue. */
 function MulticolorIcon({
   Icon,
@@ -305,12 +321,8 @@ function Navbar({ nav }: { nav: Nav }) {
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16">
-          <a href="#" onClick={anchor("#")} className="flex items-center gap-3 shrink-0">
-            <img src={imgLogo} alt="" className="w-11 h-11 shrink-0" />
-            <div className="flex flex-col leading-none">
-              <span className="text-[11px] text-[#64748b] font-medium tracking-wide">Ozey</span>
-              <span className="text-lg font-bold text-[#1e293b] tracking-tight">SHG</span>
-            </div>
+          <a href="#" onClick={anchor("#")} className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+            <BrandLockup size="nav" />
           </a>
 
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-[#1e293b]">
@@ -1246,11 +1258,7 @@ function Footer({ nav }: { nav: Nav }) {
     <footer className="border-t border-[#e7e5e4] py-10 px-4" style={{ zIndex: 1, position: "relative" }}>
       <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-5">
         <div className="flex items-center gap-3">
-          <img src={imgLogo} alt="" className="w-9 h-9 shrink-0" />
-          <div>
-            <div className="text-xs text-[#64748b]">Ozey</div>
-            <div className="text-base font-bold text-[#1e293b] leading-none">SHG</div>
-          </div>
+          <BrandLockup size="footer" />
         </div>
         <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-[#64748b] font-medium">
           <a href="#product" onClick={anchor("#product")} className="hover:text-[#00a697] transition-colors">Product</a>

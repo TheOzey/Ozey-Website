@@ -1,7 +1,7 @@
 {
-  "name": "Ozey SHG",
+  "name": "Ozey SHG — Self Help Group Manager",
   "short_name": "Ozey SHG",
-  "description": "A free Android app for Self Help Groups in India. Keep members, monthly savings, loans, meetings and the group ledger in one place.",
+  "description": "Self Help Group Manager — a free Android app for Self Help Groups in India. Keep members, monthly savings, loans, meetings and the group ledger in one place.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#fffdf5",
