@@ -6,8 +6,18 @@ Firebase project (`ozey-shg`). SHG is the only product shown in the console;
 other products are added to `src/products/registry.ts` when they go live.
 
 - Next.js 16 (App Router), React 19, TypeScript
-- HeroUI v3 + Tailwind CSS v4, Lucide icons
+- HeroUI v3 (existing surfaces) + [beUI](https://beui.dev/) motion components for new UI
+- Tailwind CSS v4, Lucide icons, Motion
 - Firebase JS SDK 12 (Auth + Firestore), TanStack Query
+
+### UI library policy (Approach A)
+
+- **Keep HeroUI** for existing forms, tables, dialogs, and directories — do not rip them out in this phase.
+- **Prefer beUI** for anything new (and for selective motion polish). Install with:
+  `pnpm dlx shadcn@latest add @beui/<component>`
+  Components land under `src/components/motion/`. Registry: `components.json` → `@beui`.
+- Shell chrome already on beUI: `console-shell` (Drawer + Button), `sidebar-nav` (spring active pill), `user-menu` (Popover), `context-header` (compact-title fade).
+- Theme bridge: Ozey tokens in `globals.css` map beUI `primary` / `card` / `muted-foreground` onto the Console palette without replacing HeroUI `--accent` / `--muted`.
 
 Read [`SHG_DATA_MODEL.md`](SHG_DATA_MODEL.md) first. It documents the SHG data
 model this console reads, and the one blocker below.

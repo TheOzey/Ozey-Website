@@ -1,9 +1,10 @@
 "use client";
 
-import { Button, Drawer, Separator } from "@heroui/react";
 import { Menu } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { type ReactNode, useState } from "react";
+import { Button } from "@/components/motion/button/base";
+import { Drawer } from "@/components/motion/drawer";
 import { productForPath } from "@/products/registry";
 import { HeaderLead } from "./header-back-link";
 import { SidebarNav } from "./sidebar-nav";
@@ -21,23 +22,25 @@ export function ConsoleShell({ children }: { children: ReactNode }) {
         <SidebarNav />
       </aside>
 
-      <Drawer.Backdrop isOpen={drawer.open} onOpenChange={(open) => setDrawer({ open, pathname })}>
-        <Drawer.Content placement="left" className="w-72 max-w-[85vw]">
-          <Drawer.Dialog aria-label="Navigation" className="h-full p-0">
-            <SidebarNav />
-          </Drawer.Dialog>
-        </Drawer.Content>
-      </Drawer.Backdrop>
+      <Drawer
+        open={drawer.open}
+        onOpenChange={(open) => setDrawer({ open, pathname })}
+        side="left"
+        ariaLabel="Navigation"
+        className="w-72 max-w-[85vw] bg-surface p-0 shadow-none"
+      >
+        <SidebarNav />
+      </Drawer>
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center gap-2 border-b border-border bg-surface/85 px-4 backdrop-blur sm:px-6">
           <Button
-            isIconOnly
-            size="sm"
+            type="button"
             variant="ghost"
+            size="icon"
             aria-label="Open navigation"
-            className="lg:hidden"
-            onPress={() => setDrawer({ open: true, pathname })}
+            className="rounded-lg text-foreground lg:hidden"
+            onClick={() => setDrawer({ open: true, pathname })}
           >
             <Menu className="size-5" aria-hidden />
           </Button>
@@ -47,7 +50,7 @@ export function ConsoleShell({ children }: { children: ReactNode }) {
           {productForPath(pathname) ? (
             <>
               <span className="hidden text-xs text-muted sm:inline">Read-only access</span>
-              <Separator orientation="vertical" className="mx-2 hidden h-5 sm:block" />
+              <span className="mx-2 hidden h-5 w-px bg-border sm:block" aria-hidden />
             </>
           ) : null}
           <UserMenu />

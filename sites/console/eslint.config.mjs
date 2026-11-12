@@ -4,7 +4,8 @@ import nextTs from "eslint-config-next/typescript";
 const config = [
   ...nextVitals,
   ...nextTs,
-  { ignores: [".next/**", "node_modules/**", "next-env.d.ts"] },
+  // beUI registry installs under components/motion; keep vendor rules muted.
+  { ignores: [".next/**", "node_modules/**", "next-env.d.ts", "src/components/motion/**"] },
   // Tests assert on arbitrary JSON API responses.
   { files: ["tests/**/*.ts"], rules: { "@typescript-eslint/no-explicit-any": "off" } },
 ];

@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { motion, useReducedMotion } from "motion/react";
+import { useEffect, useId, useRef } from "react";
+import { SPRING_SWAP } from "@/lib/ease";
 
 export interface NavTab {
   label: string;
@@ -16,14 +18,9 @@ export function isPathActive(pathname: string, href: string, exact = false) {
 }
 
 /**
- * Route-backed horizontal navigation: real links (so back/forward, refresh and
- * open-in-new-tab work), an accent underline under the current label, and a
- * hairline divider. Used at two levels:
- *   "product"  — a product's sections (SHG: Overview · Groups · Reports)
- *   "section"  — one record's sections (a group: Overview · Members · …),
- *                one step smaller so it reads as the level below.
- * On narrow screens the strip scrolls sideways on its own (never the page)
- * and keeps the active tab in view.
+ * Route-backed horizontal navigation with a beUI-style spring underline.
+ * Real links (back/forward, refresh, open-in-new-tab) stay intact; motion is
+ * limited to the active indicator (respects reduced motion).
  */
 export function NavTabs({
   label,
@@ -39,6 +36,8 @@ export function NavTabs({
 }) {
   const pathname = usePathname();
   const scroller = useRef<HTMLElement>(null);
+  const layoutId = useId();
+  const reduceMotion = useReducedMotion();
 
   useEffect(() => {
     const strip = scroller.current;
@@ -60,19 +59,31 @@ export function NavTabs({
         {tabs.map((tab) => {
           const active = isPathActive(pathname, tab.href, tab.exact);
           return (
-            <li key={tab.href} className="flex">
+            <li key={tab.href} className="relative flex">
               <Link
                 href={tab.href}
                 aria-current={active ? "page" : undefined}
                 className={[
                   divider ? "-mb-px" : "",
-                  "flex items-center border-b-2 font-medium whitespace-nowrap transition-colors outline-none",
+                  "relative flex items-center font-medium whitespace-nowrap transition-colors outline-none",
                   "focus-visible:text-foreground focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-inset",
                   level === "product" ? "h-11 text-sm" : "h-10 text-[13px]",
-                  active ? "border-accent text-accent" : "border-transparent text-muted hover:text-foreground",
+                  active ? "text-accent" : "text-muted hover:text-foreground",
                 ].join(" ")}
               >
                 {tab.label}
+                {active ? (
+                  reduceMotion ? (
+                    <span className="absolute inset-x-0 bottom-0 h-0.5 bg-accent" aria-hidden />
+                  ) : (
+                    <motion.span
+                      layoutId={`nav-tabs-underline-${layoutId}`}
+                      className="absolute inset-x-0 bottom-0 h-0.5 bg-accent"
+                      transition={SPRING_SWAP}
+                      aria-hidden
+                    />
+                  )
+                ) : null}
               </Link>
             </li>
           );

@@ -1,8 +1,9 @@
 "use client";
 
-import { Avatar, Button, Dropdown, Header, Label } from "@heroui/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/motion/button/base";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/motion/popover";
 import { useConsoleSession } from "@/lib/auth/session-context";
 import { initials } from "@/lib/format";
 
@@ -19,28 +20,38 @@ export function UserMenu() {
   }
 
   return (
-    <Dropdown>
-      <Button variant="ghost" size="sm" isIconOnly aria-label="Account" className="rounded-full">
-        <Avatar size="sm">
-          <Avatar.Fallback>{initials(displayName)}</Avatar.Fallback>
-        </Avatar>
-      </Button>
-      <Dropdown.Popover placement="bottom end" className="min-w-64">
-        <Dropdown.Menu onAction={(key) => (key === "sign-out" ? void signOut() : undefined)}>
-          <Dropdown.Section>
-            <Header>
-              <span className="block truncate text-sm font-semibold text-foreground">{displayName}</span>
-              <span className="block truncate text-xs font-normal text-muted">{email}</span>
-              <span className="mt-2 block text-[11px] font-normal text-muted">
-                {permissions.length ? permissions.join(" · ") : "No permissions"}
-              </span>
-            </Header>
-          </Dropdown.Section>
-          <Dropdown.Item id="sign-out" textValue="Sign out">
-            <Label>Sign out</Label>
-          </Dropdown.Item>
-        </Dropdown.Menu>
-      </Dropdown.Popover>
-    </Dropdown>
+    <Popover side="bottom" align="end" sideOffset={10} panelRadius={12}>
+      <PopoverTrigger>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          aria-label="Account"
+          className="rounded-full p-0"
+        >
+          <span className="flex size-8 items-center justify-center rounded-full bg-default text-[12px] font-semibold text-foreground">
+            {initials(displayName)}
+          </span>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="min-w-64 p-3">
+        <div className="border-b border-border px-1 pb-3">
+          <p className="truncate text-sm font-semibold text-foreground">{displayName}</p>
+          <p className="truncate text-xs text-muted">{email}</p>
+          <p className="mt-2 text-[11px] text-muted">
+            {permissions.length ? permissions.join(" · ") : "No permissions"}
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="mt-2 h-9 w-full justify-start rounded-lg px-2 text-sm font-medium text-foreground"
+          onClick={() => void signOut()}
+        >
+          Sign out
+        </Button>
+      </PopoverContent>
+    </Popover>
   );
 }

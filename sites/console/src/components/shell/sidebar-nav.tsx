@@ -1,25 +1,54 @@
 "use client";
 
+import { Handshake, UsersRound } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { type ReactNode, useId } from "react";
 import { OzeyMark } from "@/components/brand/ozey-mark";
-import { Handshake, UsersRound } from "lucide-react";
+import { ProductMark } from "@/components/brand/product-mark";
 import { isPathActive } from "@/components/navigation/nav-tabs";
+import { SPRING_LAYOUT } from "@/lib/ease";
 import { PRODUCTS } from "@/products/registry";
 import { CONSOLE_NAVIGATION, WORKFORCE_NAVIGATION } from "./console-navigation";
-import { ProductMark } from "@/components/brand/product-mark";
-function NavLink({ href, active, children }: { href: string; active: boolean; children: ReactNode }) {
+
+function NavLink({
+  href,
+  active,
+  layoutId,
+  reduceMotion,
+  children,
+}: {
+  href: string;
+  active: boolean;
+  layoutId: string;
+  reduceMotion: boolean | null;
+  children: ReactNode;
+}) {
   return (
     <Link
       href={href}
       aria-current={active ? "page" : undefined}
       className={[
-        "group flex h-9 items-center gap-2.5 rounded-lg px-2.5 text-[13.5px] transition-colors outline-none focus-visible:ring-2 focus-visible:ring-focus",
-        active ? "bg-accent/8 font-semibold text-accent" : "font-medium text-foreground/75 hover:bg-default hover:text-foreground",
+        "group relative flex h-9 items-center gap-2.5 rounded-lg px-2.5 text-[13.5px] transition-colors outline-none focus-visible:ring-2 focus-visible:ring-focus",
+        active ? "font-semibold text-accent" : "font-medium text-foreground/75 hover:text-foreground",
       ].join(" ")}
     >
-      {children}
+      {active ? (
+        reduceMotion ? (
+          <span className="absolute inset-0 rounded-lg bg-accent/8" aria-hidden />
+        ) : (
+          <motion.span
+            layoutId={layoutId}
+            className="absolute inset-0 rounded-lg bg-accent/8"
+            transition={SPRING_LAYOUT}
+            aria-hidden
+          />
+        )
+      ) : (
+        <span className="absolute inset-0 rounded-lg opacity-0 transition-colors group-hover:bg-default group-hover:opacity-100" aria-hidden />
+      )}
+      <span className="relative z-[1] flex min-w-0 items-center gap-2.5">{children}</span>
     </Link>
   );
 }
@@ -32,6 +61,8 @@ const WORKFORCE_ICONS = {
 /** Console-level navigation only. Each product navigates within its own header. */
 export function SidebarNav() {
   const pathname = usePathname();
+  const layoutId = `sidebar-active-${useId()}`;
+  const reduceMotion = useReducedMotion();
 
   return (
     <div className="flex h-full flex-col">
@@ -47,7 +78,7 @@ export function SidebarNav() {
             const active = isPathActive(pathname, href, exact);
             return (
               <li key={href}>
-                <NavLink href={href} active={active}>
+                <NavLink href={href} active={active} layoutId={layoutId} reduceMotion={reduceMotion}>
                   <Icon className={`size-4 shrink-0 ${active ? "text-accent" : "text-muted group-hover:text-foreground"}`} aria-hidden />
                   <span className="truncate">{label}</span>
                 </NavLink>
@@ -63,7 +94,7 @@ export function SidebarNav() {
             const active = isPathActive(pathname, href);
             return (
               <li key={href}>
-                <NavLink href={href} active={active}>
+                <NavLink href={href} active={active} layoutId={layoutId} reduceMotion={reduceMotion}>
                   <Icon className={`size-4 shrink-0 ${active ? "text-accent" : "text-muted group-hover:text-foreground"}`} aria-hidden />
                   <span className="truncate">{label}</span>
                 </NavLink>
@@ -76,7 +107,7 @@ export function SidebarNav() {
         <ul className="space-y-0.5">
           {PRODUCTS.map((product) => (
             <li key={product.key}>
-              <NavLink href={product.href} active={isPathActive(pathname, product.href)}>
+              <NavLink href={product.href} active={isPathActive(pathname, product.href)} layoutId={layoutId} reduceMotion={reduceMotion}>
                 <ProductMark product={product} size={18} />
                 <span className="truncate">{product.name}</span>
               </NavLink>

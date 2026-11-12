@@ -1,7 +1,9 @@
 "use client";
 
+import { motion, useReducedMotion } from "motion/react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { PAGE_X } from "@/components/page/page-container";
+import { EASE_OUT } from "@/lib/ease";
 
 /** Height of the console's main (top) header; the tab row sticks right below it. */
 const MAIN_HEADER_PX = 56;
@@ -32,6 +34,7 @@ export function ContextHeader({
 }) {
   const identityRef = useRef<HTMLDivElement>(null);
   const [collapsed, setCollapsed] = useState(false);
+  const reduceMotion = useReducedMotion();
 
   useEffect(() => {
     const el = identityRef.current;
@@ -55,14 +58,17 @@ export function ContextHeader({
           <div className={`${PAGE_X} flex items-center gap-6`}>
             <div className="min-w-0 flex-1">{navigation}</div>
             {compactTitle ? (
-              <div
+              <motion.div
                 aria-hidden={!collapsed}
-                className={`hidden max-w-[40%] truncate text-[13px] font-semibold text-foreground transition-opacity duration-150 sm:block ${
-                  collapsed ? "opacity-100" : "pointer-events-none opacity-0"
+                initial={false}
+                animate={{ opacity: collapsed ? 1 : 0 }}
+                transition={reduceMotion ? { duration: 0 } : { duration: 0.15, ease: EASE_OUT }}
+                className={`hidden max-w-[40%] truncate text-[13px] font-semibold text-foreground sm:block ${
+                  collapsed ? "" : "pointer-events-none"
                 }`}
               >
                 {compactTitle}
-              </div>
+              </motion.div>
             ) : null}
           </div>
         </div>
